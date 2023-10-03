@@ -3,24 +3,31 @@ from pxr.Usdviewq.plugin import PluginContainer
 from PySide6 import QtWidgets, QtCore
 from . import chat_widget
 from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QPushButton, QDockWidget, QLabel, QApplication
+    QWidget,
+    QVBoxLayout,
+    QPushButton,
+    QDockWidget,
+    QLabel,
+    QApplication,
+    QSizePolicy,
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 
 active_chat_ui_instance = None
 
+
 def onStartup(usdviewApi):
     load_chat_widget(usdviewApi)
 
-class USDChatPluginContainer(PluginContainer):
 
+class USDChatPluginContainer(PluginContainer):
     def registerPlugins(self, plugRegistry, usdviewApi):
         # Register command plugin to create and show ChatWidget
         self._load_chat_widget = plugRegistry.registerCommandPlugin(
             "USDChatPluginContainer.load_chat_widget",
             "Load Chat Widget",
-            lambda usdviewApi: load_chat_widget(usdviewApi)
+            lambda usdviewApi: load_chat_widget(usdviewApi),
         )
         onStartup(usdviewApi)
 
@@ -46,10 +53,13 @@ class CollapsibleDockWidget(QDockWidget):
         self.widget().setVisible(self._content_visible)
         if self._content_visible:
             self.toggle_button.setText("🤖 USDChat")
-            self.toggle_button.setFont(QFont("Sans-serif", 12))  # Resetting to a standard font size
+            self.toggle_button.setFont(
+                QFont("Sans-serif", 12)
+            )  # Resetting to a standard font size
         else:
             self.toggle_button.setText("🤖")
             self.toggle_button.setFont(QFont("Sans-serif", 35))
+
 
 def load_chat_widget(usdviewApi):
     global active_chat_ui_instance
@@ -60,7 +70,15 @@ def load_chat_widget(usdviewApi):
         dock_widget.setWidget(active_chat_ui_instance)
         usdviewApi.qMainWindow.addDockWidget(Qt.RightDockWidgetArea, dock_widget)
         dock_widget.show()
+
+        # Added Expanding size policy to dock_widget
+        dock_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
     else:
         active_chat_ui_instance.raise_()
 
+
 Tf.Type.Define(USDChatPluginContainer)
+
+if __name__ == "__main__":
+    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)
