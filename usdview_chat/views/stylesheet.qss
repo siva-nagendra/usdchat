@@ -1,0 +1,71 @@
+/* Global Styles */
+QWidget {
+    font-family: "Arial", sans-serif;
+    font-size: 14px;
+}
+
+/* User Input Styles */
+QTextEdit#user_input {
+    background-color: #444;
+    color: #fff;
+    border: 1px solid #555;
+    padding: 5px;
+}
+
+/* Submit Button Styles */
+QPushButton#submit_button {
+    background-color: #3684ac; /* Pastel blue color for the Send button */
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+}
+
+QPushButton#submit_button:pressed {
+    background-color: #3596bd; /* Slightly different blue when button is pressed */
+}
+
+QPushButton#submit_button:hover {
+    background-color: #2f7a9a; /* Darker blue when hovered */
+}
+
+/* Audio Toggle Button Styles */
+QPushButton#audio_toggle_button[checked="true"] {
+    background-color: #2f7b2f; /* Pastel green color when audio is on */
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+}
+
+QPushButton#audio_toggle_button[checked="false"] {
+    background-color: #676767; /* Grey color when audio is off */
+    color: #fff;
+    border: none;
+    padding: 5px 10px;
+}
+
+QPushButton#audio_toggle_button:hover {
+    background-color: #5e5e5e; /* Darker grey when hovered and audio is off */
+}
+
+/* Word Count Label Styles */
+QLabel#word_count_label {
+    color: #aaa;
+}
+
+#user_message {
+    background-color: #3684ac;
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    max-width: 60%;
+    border: 1px solid transparent;  /* Add this line */
+}
+
+#bot_message {
+    background-color: #676767;
+    color: white;
+    border-radius: 10px;
+    padding: 10px;
+    max-width: 60%;
+    border: 1px solid transparent;  /* Add this line */
+}
