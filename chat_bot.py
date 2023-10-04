@@ -40,7 +40,8 @@ class Chat:
         return messages
 
     def chat(self, messages):
-        messages = self.reinsert_system_message(messages)
+        if isinstance(messages, str):
+            messages = [{"role": "user", "content": messages}]
         completion = openai.ChatCompletion.create(
             model=self.model,
             temperature=self.temp,
@@ -51,7 +52,9 @@ class Chat:
         return reply_content
 
     def stream_chat(self, messages, delay_time=0.01):
-        messages = self.reinsert_system_message(messages)
+        if isinstance(messages, str):
+            messages = [{"role": "user", "content": messages}]
+        # messages = self.reinsert_system_message(messages)
         response = openai.ChatCompletion.create(
             model=self.model,
             temperature=self.temp,
@@ -78,24 +81,6 @@ class Chat:
             text_to_speech(chunk)
             return reply_content
         return reply_content
-
-    def process_user_input(self, user_input):
-        # Prepare the message history with the new user input
-        message = {"role": "user", "content": user_input}
-        self.message_history.append(
-            {"sender": "user", "message": user_input}
-        )
-
-        # Check if executive action is needed
-        agent_response = self.identify_task(user_input)
-        if agent_response:
-            # If executive action is taken, return the response from the executive
-            return agent_response
-
-        # Otherwise, proceed with the chat
-        response = self.chat(self.message_history)
-
-        return response
 
 
 # Allows saving of message history to file for later retrival

@@ -13,11 +13,11 @@ from PySide6.QtWidgets import (
     QApplication,
     QMainWindow,
 )
-from PySide6.QtCore import Qt, QTimer, QFile, Slot, QUrl, QSize, QTextStream
-from PySide6.QtGui import QLinearGradient, QFont, QPalette, QColor, QPainter, QBrush
-from PySide6.QtQuickWidgets import QQuickWidget
-from PySide6.QtQml import QQmlApplicationEngine
-
+from PySide6.QtCore import Qt, QTimer, QFile, Slot, QUrl, QSize, QTextStream, Signal
+from PySide6.QtGui import QLinearGradient, QFont, QPalette, QColor, QPainter, QBrush, QTextOption
+from USDChat.chat_bridge import ChatBridge
+from USDChat.chat_bot import Chat
+from USDChat.utils.utils import get_model
 
 class MessageBubble(QWidget):
     def __init__(self, text, sender, parent=None):
@@ -30,6 +30,7 @@ class MessageBubble(QWidget):
         self.layout = QVBoxLayout(self)
         self.label = QLabel(self.text)
         self.label.setWordWrap(True)
+        self.label.setTextInteractionFlags(Qt.TextSelectableByMouse)
         self.layout.addWidget(self.label)
         self.layout.setContentsMargins(10, 10, 10, 10)  # Padding for the text
         self.setLayout(self.layout)
@@ -53,11 +54,24 @@ class MessageBubble(QWidget):
 
 
 class ChatBotUI(QWidget):
+    signal_user_message = Signal(str)
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        self.language_model = get_model()
+        self.chat_bot = Chat(self.language_model)
+        self.chat_bridge = ChatBridge(self.chat_bot, self)
+
         self.init_ui()
         self.load_stylesheet()
+        self.connectSignals()
+        self.activateWindow()
+        self.raise_()
 
+    def connectSignals(self):
+        # self.signal_user_message.connect(self.chat_bridge.get_bot_response)
+        self.chat_bridge.signal_bot_response.connect(self.update_chat_ui)
+    
     def init_ui(self):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.main_layout = QVBoxLayout(self)
@@ -68,7 +82,10 @@ class ChatBotUI(QWidget):
         self.scroll_area.setWidget(self.scroll_area_widget_contents)
         self.scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-        self.conversation_layout = QVBoxLayout(self.scroll_area_widget_contents)
+        self.scroll_area_layout = QVBoxLayout(self.scroll_area_widget_contents)  # New layout for scroll_area_widget_contents
+
+        self.conversation_widget = QWidget(self.scroll_area_widget_contents)  # New widget for conversation
+        self.conversation_layout = QVBoxLayout(self.conversation_widget)  # Set conversation_layout to conversation_widget
         self.conversation_layout.addStretch()
 
         self.welcome_label = QLabel(
@@ -76,24 +93,14 @@ class ChatBotUI(QWidget):
             "Welcome to USD Chat ✨</span></p>"
             '<p align="center"><span style=" font-size:14pt;">Your AI-powered USD Chat assistant!</span></p>'
             "</body></html>",
-            self.scroll_area,
+            self.scroll_area_widget_contents,
         )
         self.welcome_label.setAlignment(Qt.AlignCenter)
         self.welcome_label.setStyleSheet("background:transparent;")
         self.welcome_label.adjustSize()  # Adjust the size of the label based on its content
 
-        # Ensure the label is centered within the scroll area
-        scroll_area_width = self.scroll_area.width()
-        scroll_area_height = self.scroll_area.height()
-        label_width = self.welcome_label.width()
-        label_height = self.welcome_label.height()
-
-        x_position = (scroll_area_width) / 2
-        y_position = (scroll_area_height) / 0.1
-
-        self.welcome_label.setGeometry(
-            x_position, y_position, label_width, label_height
-        )
+        self.scroll_area_layout.addWidget(self.welcome_label)  # Add welcome_label to scroll_area_layout
+        self.scroll_area_layout.addWidget(self.conversation_widget) 
 
         self.user_input = QTextEdit()
         self.user_input.setObjectName("user_input")
@@ -134,16 +141,10 @@ class ChatBotUI(QWidget):
 
         self.submit_button.clicked.connect(self.submit_input)
         self.setWindowFlags(Qt.Window)
-        self.activateWindow()
-        self.raise_()
-        # self.expand_width(300)
 
     def resizeEvent(self, event):
         self.scroll_area.updateGeometry()
         super().resizeEvent(event)
-
-    def sizeHint(self):
-        return QSize(500, 800)
 
     def get_file_from_current_path(self, filename):
         current_file_path = os.path.abspath(__file__)
@@ -163,84 +164,92 @@ class ChatBotUI(QWidget):
         else:
             print(f"Failed to open {file_path}")
 
-    def submit_input(self):
-        user_text = self.user_input.toPlainText()
-        if user_text:
-            self.welcome_label.hide()  # Hide the welcome label when user sends a message
-            formatted_text = user_text.replace("\n", "<br>")
-            self.append_message(
-                f'<div style="text-align: right;">🤷‍♂️ You<hr>style="text-align: right;"{formatted_text}</div>',
-                "user",
+    def format_message(self, message, sender):
+        formatted_text = f'<pre style="white-space: pre-wrap; word-wrap: break-word;">{message}</pre>'
+        
+        if sender == "user":
+            formatted_response = (
+                f'<div style="text-align: right;">'
+                f'🤷‍♂️ You'
+                f'<hr>'
+                f'<div style="text-align: left;">'
+                f'{formatted_text}'
+                f'</div>'
+                f'</div>'
             )
-            self.user_input.clear()
-
-            bot_response = self.get_bot_response(user_text)
-            self.append_message(bot_response, "bot")
-
-    def get_bot_response(self, user_text):
-        formatted_text = user_text.replace("\n", "<br>")
-        formatted_response = (
-            f"<div>🤖 USDChat</div>"
-            f"<hr>"
-            f"<div style='"
-            f"border: 2px solid #444;"  # Border styling with darker color for visibility
-            f"padding: 10px;"  # Padding inside the border
-            f"margin: 5px 0;"  # Margin outside the border
-            f"border-radius: 10px;"  # Rounded corners
-            f"background-color: transparent;"  # No background color (transparent)
-            f"'>"
-            f"{formatted_text}"
-            f"</div>"
-        )
+        elif sender == "bot":
+            formatted_response = (
+                f"<div>🤖 USDChat</div>"
+                f"<hr>"
+                f"<div style='"
+                f"border: 2px solid #444;"  # Border styling with darker color for visibility
+                f"padding: 10px;"  # Padding inside the border
+                f"margin: 5px 0;"  # Margin outside the border
+                f"border-radius: 10px;"  # Rounded corners
+                f"background-color: transparent;"  # No background color (transparent)
+                f"'>"
+                f"{formatted_text}"
+                f"</div>"
+            )
+        else:
+            raise ValueError("Sender must be either 'user' or 'bot'")
+        
         return formatted_response
+
+    def submit_input(self):
+        try:
+            user_input = self.get_user_input()
+            
+            if not user_input:
+                print("User input is empty. No action taken.")
+                return
+
+            self.welcome_label.hide()  # Hide the welcome label when user sends a message
+
+            user_message = self.format_message(user_input, "user")
+            
+            self.append_message(user_message, "user")
+            
+            self.user_input.clear()
+            
+            self.get_bot_response(user_input)
+                
+        except Exception as e:
+            print(f"An error occurred: {e}")
     
+    def get_user_input(self):
+       return self.user_input.toPlainText()
+    
+    def get_bot_response(self, user_input):
+        try:
+            generated_text = self.chat_bridge.get_bot_response(user_input)
+            return generated_text
+        except AttributeError:
+            print("Chat bridge not initialized.")
+            return None
+
+    def update_chat_ui(self, bot_response):
+        try:
+            bot_message = self.format_message(bot_response, "bot")
+            self.append_message(bot_message, "bot")
+        except AttributeError:
+            print("Could not append message to UI.")
+
     def scroll_to_end(self):
+        QTimer.singleShot(0, self._scroll_to_end)
+
+    def _scroll_to_end(self):
         self.scroll_area.verticalScrollBar().setValue(
             self.scroll_area.verticalScrollBar().maximum()
         )
 
-    def append_message(self, content, sender, content_format="text"):
+    def append_message(self, content, sender):
         message_bubble = MessageBubble(content, sender)
         alignment = Qt.AlignRight if sender == "user" else Qt.AlignLeft
-
         self.conversation_layout.addWidget(message_bubble, alignment=alignment)
         self.conversation_layout.setAlignment(message_bubble, alignment)
-
-        # Ensure the scroll area stays scrolled to the bottom
-        self.scroll_area.verticalScrollBar().setValue(
-            self.scroll_area.verticalScrollBar().maximum()
-        )
         self.scroll_to_end()
-
-        # Ensure the user input field is focused after appending a message
         self.user_input.setFocus()
-
-    def get_message_style(self, sender):
-        common_style = """
-            border-radius: 10px;
-            padding: 10px;
-            max-width: 60%;
-            margin: 5px 0;
-        """
-        if sender == "user":
-            return f"""
-                {common_style}
-                background-color: #3684ac;
-                color: white;
-            """
-        else:  # sender == "bot"
-            return f"""
-                {common_style}
-                background-color: #676767;
-                color: white;
-            """
-
-    def get_dock_widget(self):
-        if not hasattr(self, "_dock_widget"):
-            self._dock_widget = QDockWidget("🤖 USDChat", self.parent())
-            self._dock_widget.setWidget(self)
-            self._dock_widget.visibilityChanged.connect(self.handle_visibility_changed)
-        return self._dock_widget
 
     def handle_visibility_changed(self, visible):
         if not visible:
@@ -249,7 +258,3 @@ class ChatBotUI(QWidget):
 
     def sizeHint(self):
         return QSize(500, 800)
-
-
-if __name__ == "__main__":
-    QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
