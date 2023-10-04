@@ -1,0 +1,50 @@
+/* Global Styles */
+QWidget {
+    font-family: "Arial";  /* Orbitron is a futuristic font, fallback to Arial if not available */
+    font-size: 14px;
+}
+
+/* User Input Styles */
+QTextEdit#user_input {
+    background-color: #1C1C1C;
+    color: #00FF00;  /* Neon Green Text */
+    border: 2px solid #FF8C00;
+    padding: 3px;
+    border-radius: 10px;
+}
+
+/* Submit Button Styles */
+QPushButton#submit_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FF416C, stop:1 #FF4B2B);  /* Neon gradient */
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton#submit_button:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FF4B2B, stop:1 #FF416C);  /* Inverted Neon gradient */
+}
+
+QPushButton#submit_button:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FF8C00, stop:1 #FF416C);  /* Modified Neon gradient */
+}
+
+/* Message Styles */
+QLabel#user_message, QLabel#bot_message {
+    border-radius: 10px;
+    padding: 10px;
+    max-width: 60%;
+    border: 2px solid #FF8C00;  /* Brighter border color */
+}
+
+QLabel#user_message {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FF416C, stop:1 #FF4B2B);  /* Neon gradient */
+    color: #1C1C1C;
+}
+
+QLabel#bot_message {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00FF00, stop:1 #008C00);  /* Green Neon gradient */
+    color: #1C1C1C;
+}

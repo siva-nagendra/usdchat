@@ -2,10 +2,10 @@
     "Plugins": [
         {
             "Type": "python",
-            "Name": "usdview_chat.views.usdview",
+            "Name": "usdview_chat.usdview",
             "Info": {
                 "Types": {
-                    "usdview_chat.views.usdview.USDChatPluginContainer": {
+                    "usdview_chat.usdview.USDChatPluginContainer": {
                         "bases": ["pxr.Usdviewq.plugin.PluginContainer"],
                         "displayName": "USD Chat"
                     }

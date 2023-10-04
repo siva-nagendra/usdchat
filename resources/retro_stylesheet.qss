@@ -1,0 +1,49 @@
+/* Global Styles */
+QWidget {
+    font-family: "Arial";
+    font-size: 14px;
+}
+
+/* User Input Styles */
+QTextEdit#user_input {
+    background-color: #2E2E2E;
+    color: #ffffff;
+    border: 2px solid #542e00;
+    padding: 5px;
+    border-radius: 10px;
+}
+
+/* Submit Button Styles */
+QPushButton#submit_button {
+    background-color: #c96e00;
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+QPushButton#submit_button:pressed {
+    background-color: #E07B00;
+}
+
+QPushButton#submit_button:hover {
+    background-color: #FFA233;
+}
+
+/* Message Styles */
+QLabel#user_message, QLabel#bot_message {
+    border-radius: 10px;
+    padding: 10px;
+    max-width: 60%;
+    border: 1px solid #FF8C00;
+}
+
+QLabel#user_message {
+    background-color: #FF8C00;
+    color: #2E2E2E;
+}
+
+QLabel#bot_message {
+    background-color: #2E2E2E;
+    color: #FF8C00;
+}

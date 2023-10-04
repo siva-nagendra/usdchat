@@ -1,7 +1,8 @@
+import os
+import sys
 from pxr import Tf
 from pxr.Usdviewq.plugin import PluginContainer
 from PySide6 import QtWidgets, QtCore
-from . import chat_widget
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -13,6 +14,9 @@ from PySide6.QtWidgets import (
 )
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+from views import chat_widget
 
 active_chat_ui_instance = None
 
@@ -47,6 +51,7 @@ class CollapsibleDockWidget(QDockWidget):
         self.toggle_button.clicked.connect(self.toggle_content)
         self.setTitleBarWidget(self.toggle_button)
         self._content_visible = True
+        self._preferred_size = None  # Store the preferred size
 
     def toggle_content(self):
         self._content_visible = not self._content_visible
@@ -56,9 +61,12 @@ class CollapsibleDockWidget(QDockWidget):
             self.toggle_button.setFont(
                 QFont("Sans-serif", 12)
             )  # Resetting to a standard font size
+            if self._preferred_size:
+                self.widget().resize(self._preferred_size)  # Restore the preferred size
         else:
             self.toggle_button.setText("🤖")
             self.toggle_button.setFont(QFont("Sans-serif", 35))
+            self._preferred_size = self.widget().size()
 
 
 def load_chat_widget(usdviewApi):

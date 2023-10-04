@@ -1,4 +1,5 @@
 import os
+import sys
 from PySide6.QtWidgets import (
     QWidget,
     QVBoxLayout,
@@ -10,10 +11,45 @@ from PySide6.QtWidgets import (
     QLabel,
     QSizePolicy,
     QApplication,
+    QMainWindow,
 )
-from PySide6.QtCore import Qt, QTimer
-from PySide6.QtGui import QFont
-from .text_message import TextMessageWidget
+from PySide6.QtCore import Qt, QTimer, QFile, Slot, QUrl, QSize, QTextStream
+from PySide6.QtGui import QLinearGradient, QFont, QPalette, QColor, QPainter, QBrush
+from PySide6.QtQuickWidgets import QQuickWidget
+from PySide6.QtQml import QQmlApplicationEngine
+
+
+class MessageBubble(QWidget):
+    def __init__(self, text, sender, parent=None):
+        super().__init__(parent)
+        self.text = text
+        self.sender = sender
+        self.init_ui()
+
+    def init_ui(self):
+        self.layout = QVBoxLayout(self)
+        self.label = QLabel(self.text)
+        self.label.setWordWrap(True)
+        self.layout.addWidget(self.label)
+        self.layout.setContentsMargins(10, 10, 10, 10)  # Padding for the text
+        self.setLayout(self.layout)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.Antialiasing)
+
+        gradient = QLinearGradient(self.rect().topLeft(), self.rect().bottomLeft())
+        if self.sender == "user":
+            gradient.setColorAt(0, QColor("#993366"))  # Darker Pink
+            gradient.setColorAt(1, QColor("#663366"))  # Darker Purple
+        else:
+            gradient.setColorAt(0, QColor("#336699"))  # Darker Cyan
+            gradient.setColorAt(1, QColor("#336666"))  # Darker Teal
+
+        painter.setBrush(QBrush(gradient))
+        painter.setPen(Qt.NoPen)  # No border outline
+        rect = self.rect().adjusted(2, 2, -2, -2)
+        painter.drawRoundedRect(rect, 5, 5)
 
 
 class ChatBotUI(QWidget):
@@ -67,17 +103,25 @@ class ChatBotUI(QWidget):
 
         self.submit_button = QPushButton("Send")
         self.submit_button.setObjectName("submit_button")
-        self.submit_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
-
-        self.audio_toggle_button = QPushButton("Audio Off", self)
-        self.audio_toggle_button.setObjectName("audio_toggle_button")
-        self.audio_toggle_button.setCheckable(True)
-        self.audio_toggle_button.setChecked(False)
-        self.audio_toggle_button.clicked.connect(self.toggle_audio)
+        self.submit_button.setStyleSheet("""
+            QPushButton {
+                background-color: #444;
+                color: white;
+                border: none;
+                padding: 10px;
+                border-radius: 5px;
+            }
+            QPushButton:hover {
+                background-color: #555;
+            }
+            QPushButton:pressed {
+                background-color: #333;
+            }
+        """)
+        # self.submit_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         buttons_widget = QWidget()
         buttons_layout = QHBoxLayout(buttons_widget)  # Assign the layout to a widget
-        buttons_layout.addWidget(self.audio_toggle_button)
         buttons_layout.addWidget(self.submit_button)
         buttons_widget.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Fixed
@@ -90,102 +134,44 @@ class ChatBotUI(QWidget):
 
         self.submit_button.clicked.connect(self.submit_input)
         self.setWindowFlags(Qt.Window)
+        self.activateWindow()
         self.raise_()
-        self.expand_width(300)
+        # self.expand_width(300)
 
     def resizeEvent(self, event):
         self.scroll_area.updateGeometry()
         super().resizeEvent(event)
 
+    def sizeHint(self):
+        return QSize(500, 800)
+
+    def get_file_from_current_path(self, filename):
+        current_file_path = os.path.abspath(__file__)
+        current_dir_path = os.path.dirname(current_file_path)
+
+        req_file = os.path.join(current_dir_path, filename)
+        return req_file
+
     def load_stylesheet(self):
-        stylesheet = """
-            /* Global Styles */
-            QWidget {
-                font-family: "Arial", sans-serif;
-                font-size: 14px;
-            }
-
-            /* User Input Styles */
-            QTextEdit#user_input {
-                background-color: #444;
-                color: #fff;
-                border: 1px solid #555;
-                padding: 5px;
-                border-radius: 10px;  /* Added rounded rectangle effect */
-            }
-
-            /* Submit Button Styles */
-            QPushButton#submit_button {
-                background-color: #3684ac;
-                color: #fff;
-                border: none;
-                padding: 5px 10px;
-            }
-
-            QPushButton#submit_button:pressed {
-                background-color: #3596bd;
-            }
-
-            QPushButton#submit_button:hover {
-                background-color: #2f7a9a;
-            }
-
-            /* Audio Toggle Button Styles */
-            QPushButton#audio_toggle_button[checked="true"] {
-                background-color: #2f7b2f;
-                color: #fff;
-                border: none;
-                padding: 5px 10px;
-            }
-
-            QPushButton#audio_toggle_button[checked="false"] {
-                background-color: #676767;
-                color: #fff;
-                border: none;
-                padding: 5px 10px;
-            }
-
-            QPushButton#audio_toggle_button:hover {
-                background-color: #5e5e5e;
-            }
-
-            /* Word Count Label Styles */
-            QLabel#word_count_label {
-                color: #aaa;
-            }
-
-            /* Message Styles */
-            QLabel#user_message, QLabel#bot_message {
-                border-radius: 10px;
-                padding: 10px;
-                max-width: 60%;
-                border: 1px solid transparent;
-            }
-
-            QLabel#user_message {
-                background-color: #3684ac;
-                color: white;
-            }
-
-            QLabel#bot_message {
-                background-color: #676767;
-                color: white;
-            }
-        """
-        self.setStyleSheet(stylesheet)
-
-    def toggle_audio(self):
-        if self.audio_toggle_button.isChecked():
-            self.audio_toggle_button.setText("Audio On")
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        file_path = os.path.join(current_dir, '..', 'resources', 'cyberpunk.qss')
+        file = QFile(file_path)
+        if file.open(QFile.ReadOnly | QFile.Text):
+            stream = QTextStream(file)
+            stylesheet = stream.readAll()
+            self.setStyleSheet(stylesheet)
         else:
-            self.audio_toggle_button.setText("Audio Off")
+            print(f"Failed to open {file_path}")
 
     def submit_input(self):
         user_text = self.user_input.toPlainText()
         if user_text:
             self.welcome_label.hide()  # Hide the welcome label when user sends a message
             formatted_text = user_text.replace("\n", "<br>")
-            self.append_message(f"🤷‍♂️ You: <br>{formatted_text}", "user")
+            self.append_message(
+                f'<div style="text-align: right;">🤷‍♂️ You<hr>style="text-align: right;"{formatted_text}</div>',
+                "user",
+            )
             self.user_input.clear()
 
             bot_response = self.get_bot_response(user_text)
@@ -194,7 +180,8 @@ class ChatBotUI(QWidget):
     def get_bot_response(self, user_text):
         formatted_text = user_text.replace("\n", "<br>")
         formatted_response = (
-            f"<div style='color: grey;'>USDChat: 🤖</div>"
+            f"<div>🤖 USDChat</div>"
+            f"<hr>"
             f"<div style='"
             f"border: 2px solid #444;"  # Border styling with darker color for visibility
             f"padding: 10px;"  # Padding inside the border
@@ -206,30 +193,18 @@ class ChatBotUI(QWidget):
             f"</div>"
         )
         return formatted_response
+    
+    def scroll_to_end(self):
+        self.scroll_area.verticalScrollBar().setValue(
+            self.scroll_area.verticalScrollBar().maximum()
+        )
 
     def append_message(self, content, sender, content_format="text"):
-        text_widget = TextMessageWidget(content, content_format)
-        text_widget.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Fixed
-        )  # Allow horizontal expansion
-
+        message_bubble = MessageBubble(content, sender)
         alignment = Qt.AlignRight if sender == "user" else Qt.AlignLeft
 
-        message_widget = QWidget()
-        message_widget.setSizePolicy(
-            QSizePolicy.Expanding, QSizePolicy.Fixed
-        )  # Allow horizontal expansion
-
-        message_layout = QHBoxLayout(message_widget)
-
-        if sender == "user":
-            message_layout.addWidget(QWidget(), 1)  # Spacer
-        message_layout.addWidget(text_widget)
-        if sender == "bot":
-            message_layout.addWidget(QWidget(), 1)  # Spacer
-
-        self.conversation_layout.addWidget(message_widget, alignment=alignment)
-        self.conversation_layout.setAlignment(message_widget, alignment)
+        self.conversation_layout.addWidget(message_bubble, alignment=alignment)
+        self.conversation_layout.setAlignment(message_bubble, alignment)
 
         # Ensure the scroll area stays scrolled to the bottom
         self.scroll_area.verticalScrollBar().setValue(
@@ -237,14 +212,8 @@ class ChatBotUI(QWidget):
         )
         self.scroll_to_end()
 
-    def scroll_to_end(self):
-        # Use a single-shot QTimer to delay the scrolling operation.
-        QTimer.singleShot(
-            0,
-            lambda: self.scroll_area.verticalScrollBar().setValue(
-                self.scroll_area.verticalScrollBar().maximum()
-            ),
-        )
+        # Ensure the user input field is focused after appending a message
+        self.user_input.setFocus()
 
     def get_message_style(self, sender):
         common_style = """
@@ -266,21 +235,6 @@ class ChatBotUI(QWidget):
                 color: white;
             """
 
-    def get_bot_response(self, user_text):
-        formatted_response = (
-            f"<div style='color: grey;'>USDChat: 🤖</div>"
-            f"<div style='"
-            f"border: 2px solid #444;"  # Border styling with darker color for visibility
-            f"padding: 10px;"  # Padding inside the border
-            f"margin: 5px 0;"  # Margin outside the border
-            f"border-radius: 10px;"  # Rounded corners
-            f"background-color: transparent;"  # No background color (transparent)
-            f"'>"
-            f"{user_text}"
-            f"</div>"
-        )
-        return formatted_response
-
     def get_dock_widget(self):
         if not hasattr(self, "_dock_widget"):
             self._dock_widget = QDockWidget("🤖 USDChat", self.parent())
@@ -293,10 +247,8 @@ class ChatBotUI(QWidget):
             global active_chat_ui_instance
             active_chat_ui_instance = None
 
-    def expand_width(self, value):
-        current_width = self.width()
-        new_width = current_width + value
-        self.setFixedWidth(new_width)
+    def sizeHint(self):
+        return QSize(500, 800)
 
 
 if __name__ == "__main__":
