@@ -4,6 +4,7 @@ import json
 import time
 from datetime import datetime
 from text_to_speech import text_to_speech
+from USDChat.utils.speech_thread import SpeechThread
 from services.document_embedding import doc_agent
 from services.google_interface import google_agent
 
@@ -51,10 +52,9 @@ class Chat:
         reply_content = completion.choices[0].message.content
         return reply_content
 
-    def stream_chat(self, messages, delay_time=0.01):
+    def stream_chat(self, messages, delay_time=0.1):
         if isinstance(messages, str):
             messages = [{"role": "user", "content": messages}]
-        # messages = self.reinsert_system_message(messages)
         response = openai.ChatCompletion.create(
             model=self.model,
             temperature=self.temp,
@@ -63,23 +63,16 @@ class Chat:
             stream=True,
         )
         reply_content = ""
-        chunk = ""
         for event in response:
             event_text = event["choices"][0]["delta"]
             new_text = event_text.get("content", "")
-            print(new_text, end="", flush=True)
             reply_content += new_text
-            chunk += new_text
-            # Check if the chunk ends with a sentence-ending punctuation
-            if chunk and chunk[-1] in {".", "!", "?"}:
-                if self.speech == True:
-                    text_to_speech(chunk)
-                    chunk = ""
+            if self.speech == True:
+                speech_thread = SpeechThread(new_text)
+                speech_thread.start()
+            yield new_text
             time.sleep(delay_time)
-        # Call the ElevenLabs API for the remaining text if any
-        if self.speech == True:
-            text_to_speech(chunk)
-            return reply_content
+
         return reply_content
 
 
