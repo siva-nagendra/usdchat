@@ -1,22 +1,17 @@
 import os
 import sys
+
 from pxr import Tf
 from pxr.Usdviewq.plugin import PluginContainer
-from PySide6 import QtWidgets, QtCore
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QPushButton,
-    QDockWidget,
-    QLabel,
-    QApplication,
-    QSizePolicy,
-)
+from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
+from PySide6.QtWidgets import (QApplication, QDockWidget, QLabel, QPushButton,
+                               QSizePolicy, QVBoxLayout, QWidget)
+
+from views import chat_widget
 
 sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
-from views import chat_widget
 
 active_chat_ui_instance = None
 
@@ -73,10 +68,13 @@ def load_chat_widget(usdviewApi):
     global active_chat_ui_instance
 
     if active_chat_ui_instance is None or not active_chat_ui_instance.isVisible():
-        active_chat_ui_instance = chat_widget.ChatBotUI(parent=usdviewApi.qMainWindow)
-        dock_widget = CollapsibleDockWidget("🤖 USDChat", usdviewApi.qMainWindow)
+        active_chat_ui_instance = chat_widget.ChatBotUI(
+            parent=usdviewApi.qMainWindow)
+        dock_widget = CollapsibleDockWidget(
+            "🤖 USDChat", usdviewApi.qMainWindow)
         dock_widget.setWidget(active_chat_ui_instance)
-        usdviewApi.qMainWindow.addDockWidget(Qt.RightDockWidgetArea, dock_widget)
+        usdviewApi.qMainWindow.addDockWidget(
+            Qt.RightDockWidgetArea, dock_widget)
         dock_widget.show()
 
         # Added Expanding size policy to dock_widget

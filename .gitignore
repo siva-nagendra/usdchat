@@ -1,0 +1,44 @@
+# Ignore build output
+build/
+dist/
+*.pyc
+
+# Ignore virtual environment
+venv/
+
+# Ignore local configuration
+*.env
+*.log
+
+# Ignore package-lock.json for Node.js projects
+package-lock.json
+
+# Ignore dependencies installed with pipenv
+Pipfile.lock
+
+# Ignore macOS system files
+.DS_Store
+
+# Ignore Jupyter Notebook checkpoints
+.ipynb_checkpoints/
+
+# Ignore Python debugger files
+*.pid
+
+# Ignore Python coverage files
+.coverage
+
+# Ignore Python artifacts
+__pycache__/
+
+# Ignore Python eggs
+*.egg
+
+# Ignore Python lib
+lib/
+
+# Ignore Python logs
+*.log
+
+# Ignore message logs
+.message_logs/*

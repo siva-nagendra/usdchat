@@ -1,13 +1,14 @@
-import openai
-import os
 import json
+import os
 import time
 from datetime import datetime
+
+import openai
 from text_to_speech import text_to_speech
-from USDChat.utils.speech_thread import SpeechThread
+
 from services.document_embedding import doc_agent
 from services.google_interface import google_agent
-
+from USDChat.utils.speech_thread import SpeechThread
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -17,7 +18,11 @@ class Chat:
     def __init__(
         self,
         model,
-        system="You are a helpful expert in Pixar OpenUSD and an advanced Computer Graphics AI assistant!",
+        system="You are USDChat helpful expert in Pixar OpenUSD and an advanced Computer Graphics AI assistant!\
+                USDChat is an expert Pixar OpenUSD and an advanced Computer Graphics AI assistant.\
+                You can code, chat, edit 3D scenes, get stage information and interact with usdview. \
+                Above all you enjoy solving problmes, having interesting, intellectually stimulating \
+                conversations.",
         max_tokens=500,
         speech=False,
         temp=0.7,
@@ -67,7 +72,7 @@ class Chat:
             event_text = event["choices"][0]["delta"]
             new_text = event_text.get("content", "")
             reply_content += new_text
-            if self.speech == True:
+            if self.speech:
                 speech_thread = SpeechThread(new_text)
                 speech_thread.start()
             yield new_text
@@ -159,7 +164,9 @@ class Executive:
             ]
         ):
             agent_response = agent_dict[reply_content](prompt)
-            return agent_response  # Response is status recieved from agent attempting to a complete task.
+            # Response is status recieved from agent attempting to a complete
+            # task.
+            return agent_response
         else:
             return False  # False means default to chat
 
@@ -214,23 +221,28 @@ def main():
         while True:
             user_input = input("You: ")
             if user_input.lower() == "quit":
-                write_message_history_to_file(full_message_history, "./message_logs")
+                write_message_history_to_file(
+                    full_message_history, "./message_logs")
                 break
             else:
                 message_history.append({"role": "user", "content": user_input})
-                full_message_history.append({"role": "user", "content": user_input})
+                full_message_history.append(
+                    {"role": "user", "content": user_input})
                 # reduces messages when max history exceeded
                 if len(message_history) > max_history:
                     message_history = [message_history[0]] + message_history[
-                        -(max_history - 1) :
+                        -(max_history - 1):
                     ]  # Keep the system message and remove the second message
-                # Check user input, if executive is needed, call executive on user input and return result.
+                # Check user input, if executive is needed, call executive on
+                # user input and return result.
                 agent_response = gpt4_exec(message_history[-1].get("content"))
-                if agent_response == False:
+                if not agent_response:
                     print("\nUSDChat: ", end="", flush=True)
-                    gpt4_chat = Chat("gpt-4", system=system_message, speech=speech)
+                    gpt4_chat = Chat(
+                        "gpt-4", system=system_message, speech=speech)
                     response = gpt4_chat.stream_chat(message_history)
-                    message_history.append({"role": "assistant", "content": response})
+                    message_history.append(
+                        {"role": "assistant", "content": response})
                     full_message_history.append(
                         {"role": "assistant", "content": response}
                     )
@@ -245,9 +257,11 @@ def main():
                             # Print only the most recent answer
                             if i == len(agent_response) - 1:
                                 print(response["content"])
-                                if speech == True:
+                                if speech:
                                     text_to_speech(response["content"])
-                    else:  # Handling the case when the agent returns a single response (string)
+                    # Handling the case when the agent returns a single
+                    # response (string)
+                    else:
                         message_history.append(
                             {"role": "assistant", "content": agent_response}
                         )
@@ -256,7 +270,7 @@ def main():
                         )
                         agent_response
                         print(f"\n")
-                        if speech == True:
+                        if speech:
                             text_to_speech(response["content"])
 
     except KeyboardInterrupt:

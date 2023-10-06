@@ -1,4 +1,5 @@
-from PySide6.QtCore import Signal, QObject
+from PySide6.QtCore import QObject, Signal
+
 from USDChat.utils.chat_thread import ChatThread
 
 

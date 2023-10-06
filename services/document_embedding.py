@@ -1,23 +1,26 @@
-import openai
-import csv
-import PyPDF2
-import numpy as np
-from openai.embeddings_utils import cosine_similarity
-from scipy.spatial import distance_matrix
-import docx
-from striprtf.striprtf import rtf_to_text
-from odf import text, teletype
-from odf.opendocument import load
-from pptx import Presentation
-import ebooklib
-from ebooklib import epub
-from bs4 import BeautifulSoup
-import warnings
-import os
-import whisper
 import ast
+import csv
+import os
 import time
+import warnings
+
+import docx
+import ebooklib
+import numpy as np
+import openai
+import PyPDF2
+import whisper
+from bs4 import BeautifulSoup
+from ebooklib import epub
+from odf import teletype, text
+from odf.opendocument import load
+from openai.embeddings_utils import cosine_similarity
+from pptx import Presentation
+from scipy.spatial import distance_matrix
+from striprtf.striprtf import rtf_to_text
 from text_to_speech import text_to_speech
+
+from USDChat.utils.utils import get_model
 
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
@@ -71,7 +74,8 @@ def read_ppt_file(file_path):
         for shape in slide.shapes:
             if shape.has_text_frame:
                 for paragraph in shape.text_frame.paragraphs:
-                    # Split text into words and join with a single space to remove extra whitespace
+                    # Split text into words and join with a single space to
+                    # remove extra whitespace
                     text = " ".join(paragraph.text.split())
                     # Only append non-empty text
                     if text.strip():
@@ -89,7 +93,8 @@ def read_epub_file(file_path):
     for item in book.get_items_of_type(ebooklib.ITEM_DOCUMENT):
         soup = BeautifulSoup(item.get_content(), "html.parser")
         text = soup.get_text()
-        # Split text into words and join with a single space to remove extra whitespace
+        # Split text into words and join with a single space to remove extra
+        # whitespace
         cleaned_text = " ".join(text.split())
         if cleaned_text.strip():
             full_text.append(cleaned_text)
@@ -106,7 +111,8 @@ def read_html_file(file_path):
         html_content = file.read()
     soup = BeautifulSoup(html_content, "html.parser")
     text = soup.get_text()
-    # Split text into words and join with a single space to remove extra whitespace
+    # Split text into words and join with a single space to remove extra
+    # whitespace
     cleaned_text = " ".join(text.split())
     return cleaned_text
 
@@ -198,9 +204,8 @@ def calculate_centroid(embeddings):
 
 
 def closest_embeddings_to_centroid(embeddings, centroid, n=3):
-    distances = [
-        distance_matrix([embedding], [centroid])[0][0] for embedding in embeddings
-    ]
+    distances = [distance_matrix([embedding], [centroid])[
+        0][0] for embedding in embeddings]
     closest_indices = np.argpartition(distances, range(n))[:n]
     return closest_indices.tolist()
 
@@ -219,8 +224,9 @@ def search_embeddings(query, embeddings, n=3):
     """
     query_embedding = create_embeddings([query])[0]
     similarities = [
-        cosine_similarity(embedding, query_embedding) for embedding in embeddings
-    ]
+        cosine_similarity(
+            embedding,
+            query_embedding) for embedding in embeddings]
     # Get the indices of the top N most similar embeddings
     top_indices = np.argsort(similarities)[-n:][::-1]
     return top_indices.tolist()
@@ -323,7 +329,7 @@ def folder_paths(directory):
 
 def summary_agent(prompt):
     completion = openai.ChatCompletion.create(
-        model="gpt-4",
+        model=get_model(),
         temperature=0.5,
         messages=[
             {
@@ -341,7 +347,7 @@ def summary_agent(prompt):
 
 def query_agent(prompt):
     completion = openai.ChatCompletion.create(
-        model="gpt-4",
+        model=get_model(),
         temperature=0,
         messages=[
             {
@@ -361,7 +367,7 @@ def query_agent(prompt):
 
 def query_agent_stream(prompt, delay_time=0.01, speech=False):
     completion = openai.ChatCompletion.create(
-        model="gpt-4",
+        model=get_model(),
         temperature=0,
         stream=True,
         messages=[
@@ -385,12 +391,12 @@ def query_agent_stream(prompt, delay_time=0.01, speech=False):
         chunk += new_text
         # Check if the chunk ends with a sentence-ending punctuation
         if chunk and chunk[-1] in {".", "!", "?"}:
-            if speech == True:
+            if speech:
                 text_to_speech(chunk)
                 chunk = ""
         time.sleep(delay_time)
         # Call the ElevenLabs API for the remaining text if any
-    if speech == True:
+    if speech:
         text_to_speech(chunk)
         return reply_content
     return reply_content
@@ -399,7 +405,7 @@ def query_agent_stream(prompt, delay_time=0.01, speech=False):
 def doc_agent(prompt):
     prompt = prompt + " " + str(folder_paths("./docs"))
     completion = openai.ChatCompletion.create(
-        model="gpt-4",
+        model=get_model(),
         temperature=0,
         messages=[
             {

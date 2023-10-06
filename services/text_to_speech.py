@@ -1,9 +1,10 @@
-import os
-import requests
+import io
 import json
+import os
+
+import requests
 from pydub import AudioSegment
 from pydub.playback import play
-import io
 
 elevenlabs_key = os.getenv("ELEVENLABS_API_KEY")
 
@@ -23,7 +24,11 @@ def elevenlabs_tts(text, stability=0.6, similarity_boost=0.75):
         },
     }
 
-    response = requests.post(url, headers=headers, data=json.dumps(data), stream=True)
+    response = requests.post(
+        url,
+        headers=headers,
+        data=json.dumps(data),
+        stream=True)
 
     if response.status_code == 200:
         return response.content

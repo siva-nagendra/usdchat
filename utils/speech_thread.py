@@ -1,12 +1,13 @@
 from PySide6.QtCore import QThread, Signal
-from USDChat.services.text_to_speech import (
-    text_to_speech,
-)  # Import your text_to_speech function
+
+from USDChat.services.text_to_speech import \
+    text_to_speech  # Import your text_to_speech function
 
 
 class SpeechThread(QThread):
     finished_signal = Signal()  # Signal emitted when text_to_speech completes
-    error_signal = Signal(str)  # Signal emitted on error, carrying the error message
+    # Signal emitted on error, carrying the error message
+    error_signal = Signal(str)
 
     def __init__(self, text):
         super().__init__()

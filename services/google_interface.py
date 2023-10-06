@@ -1,7 +1,10 @@
-from googlesearch import search
+import openai
 import requests
 from bs4 import BeautifulSoup
-import openai
+from googlesearch import search
+
+from USDChat.utils.utils import get_model
+
 from .document_embedding import query_agent, query_agent_stream
 
 
@@ -15,7 +18,8 @@ def get_page_text(url):
             soup = BeautifulSoup(response.text, "html.parser")
             return " ".join([p.text for p in soup.find_all("p")])
         else:
-            print(f"Failed to fetch page: {url}, status code: {response.status_code}")
+            print(
+                f"Failed to fetch page: {url}, status code: {response.status_code}")
             return None
     except Exception as e:
         print(f"Error fetching page: {url}, error: {e}")
@@ -70,7 +74,11 @@ def search_and_scrape(query):
         return None
 
 
-def fetch_google_search_results(query, num_results=10, language="en", user_agent=None):
+def fetch_google_search_results(
+        query,
+        num_results=10,
+        language="en",
+        user_agent=None):
     url = f"https://www.google.com/search?q={query}&num={num_results}&hl={language}"
 
     headers = {
@@ -83,7 +91,8 @@ def fetch_google_search_results(query, num_results=10, language="en", user_agent
     if response.status_code == 200:
         return response.text
     else:
-        raise Exception(f"Failed to fetch search results: {response.status_code}")
+        raise Exception(
+            f"Failed to fetch search results: {response.status_code}")
 
 
 def parse_organic_results(html_content):
@@ -106,26 +115,26 @@ def parse_organic_results(html_content):
 
 
 def trim_text(text, start_index=450, length=1500):
-    return text[start_index : start_index + length]
+    return text[start_index: start_index + length]
 
 
 def google_agent(prompt, cutoff=6):
-    completion = openai.ChatCompletion.create(
-        model="gpt-4",
-        temperature=0,
-        messages=[
-            {
-                "role": "system",
-                "content": "You analyze a user's input to a large language model with \
-                     training data that cuts off at September 2021. The current year is 2023. You decide how \
-                     likely it is that a user's request will benefit from a Google search to help address the\
-                      question. Respond with a number in the range 1-10, where 1 is very unlikely that a \
-                     Google search would be beneficial, and 10 meaning a Google search is highly necessary.",
-            },
-            {"role": "user", "content": prompt},
-        ],
-    )
-    google_probability = int(completion.choices[0].message.content)
+    try:
+        completion = openai.ChatCompletion.create(
+            model=get_model(), temperature=0, messages=[
+                {
+                    "role": "system", "content": (
+                        "You analyze a user's input to a large language model with "
+                        "training data that cuts off at September 2021. The current year is 2023. You decide how "
+                        "likely it is that a user's request will benefit from a Google search to help address the "
+                        "question. Respond with a number in the range 1-10, where 1 is very unlikely that a "
+                        "Google search would be beneficial, and 10 meaning a Google search is highly necessary."), }, {
+                    "role": "user", "content": prompt}, ], )
+        google_probability = int(completion.choices[0].message.content)
+    except ValueError:
+        print("The model did not return a valid number.")
+        return False  # or you may choose to return a default value or handle it differently
+
     if google_probability >= cutoff:
         search_results = trim_text(search_and_scrape(prompt))
         query_with_context = prompt + str(search_results)

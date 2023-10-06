@@ -5,16 +5,19 @@ echo "Running Black..."
 black --check . || black .
 echo "Black completed."
 
-# Run Pylint
+# Run Pylint and auto-fix with autopep8 if necessary
 echo "Running Pylint..."
-find . -name "*.py" | xargs pylint || (echo "Pylint found issues, attempting to auto-fix..." && autopep8 --in-place --aggressive --aggressive *.py && pylint *.py)
+find . -name "*.py" | while read -r file; do
+    pylint "$file" || (echo "Pylint found issues in $file, attempting to auto-fix..." && autopep8 --in-place --aggressive --aggressive "$file" && pylint "$file")
+done
 echo "Pylint completed."
+
+# Run isort
+echo "Running isort..."
+isort .
+echo "isort completed."
 
 # Run tests
 echo "Running tests..."
 python -m unittest discover -s . -p "*_test.py"
-echo "Testing completed."
-pylint *.py || (echo "Pylint found issues, attempting to auto-fix..." && autopep8 --in-place --aggressive --aggressive torrento.py && pylint *.py)
-echo "Pylint completed."
-
 echo "Testing completed."

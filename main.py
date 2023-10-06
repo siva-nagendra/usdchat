@@ -1,5 +1,7 @@
 import sys
+
 from PySide6.QtWidgets import QApplication
+
 from USDChat.views.chat_widget import ChatBotUI
 
 

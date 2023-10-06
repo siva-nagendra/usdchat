@@ -1,5 +1,5 @@
-import os
 import inspect
+import os
 
 
 def get_file_from_current_path(filename):

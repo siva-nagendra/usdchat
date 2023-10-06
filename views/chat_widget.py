@@ -1,31 +1,17 @@
+import logging
 import os
 import sys
-import logging
-from PySide6.QtWidgets import (
-    QWidget,
-    QVBoxLayout,
-    QTextEdit,
-    QPushButton,
-    QHBoxLayout,
-    QDockWidget,
-    QScrollArea,
-    QLabel,
-    QSizePolicy,
-    QApplication,
-    QMainWindow,
-)
-from PySide6.QtCore import Qt, QTimer, QFile, Slot, QUrl, QSize, QTextStream, Signal
-from PySide6.QtGui import (
-    QLinearGradient,
-    QFont,
-    QPalette,
-    QColor,
-    QPainter,
-    QBrush,
-    QTextOption,
-)
-from USDChat.chat_bridge import ChatBridge
+
+from PySide6.QtCore import (QFile, QSize, Qt, QTextStream, QTimer, QUrl,
+                            Signal, Slot)
+from PySide6.QtGui import (QBrush, QColor, QFont, QLinearGradient, QPainter,
+                           QPalette, QTextOption)
+from PySide6.QtWidgets import (QApplication, QDockWidget, QHBoxLayout, QLabel,
+                               QMainWindow, QPushButton, QScrollArea,
+                               QSizePolicy, QTextEdit, QVBoxLayout, QWidget)
+
 from USDChat.chat_bot import Chat
+from USDChat.chat_bridge import ChatBridge
 from USDChat.utils.utils import get_model
 
 logging.basicConfig(
@@ -61,7 +47,9 @@ class MessageBubble(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        gradient = QLinearGradient(self.rect().topLeft(), self.rect().bottomLeft())
+        gradient = QLinearGradient(
+            self.rect().topLeft(),
+            self.rect().bottomLeft())
         if self.sender == "user":
             gradient.setColorAt(0, QColor("#993366"))  # Darker Pink
             gradient.setColorAt(1, QColor("#663366"))  # Darker Purple
@@ -85,7 +73,7 @@ class MessageBubble(QWidget):
         if self.sender == "user":
             formatted_response = (
                 '<div style="text-align: right;">'
-                '<b><span>🤷‍♂️ You</span></b>'
+                "<b><span>🤷‍♂️ You</span></b>"
                 "<hr>"
                 f'<div style="text-align: left;">{formatted_text}</div>'
                 "</div>"
@@ -98,7 +86,8 @@ class MessageBubble(QWidget):
                 f"padding: 10px;"  # Padding inside the border
                 f"margin: 5px 0;"  # Margin outside the border
                 f"border-radius: 10px;"  # Rounded corners
-                f"background-color: transparent;"  # No background color (transparent)
+                # No background color (transparent)
+                f"background-color: transparent;"
                 f"'>"
                 f"{formatted_text}"
                 f"</div>"
@@ -110,7 +99,8 @@ class MessageBubble(QWidget):
     def update_text(self, new_text):
         logging.info(f"updating text to {new_text}")
         self.current_text += new_text  # Append the new text to the current text
-        formatted_text = self.format_text(self.current_text)  # Format the current text
+        formatted_text = self.format_text(
+            self.current_text)  # Format the current text
         self.label.setText(
             formatted_text
         )  # Set the label text to the formatted current text
@@ -144,7 +134,8 @@ class AutoResizingTextEdit(QTextEdit):
         elif event.key() == Qt.Key_Return:
             # If Enter is pressed without Shift, submit the text
             if self.parent_widget:
-                self.parent_widget.submit_input()  # Ensure parent_widget is not None before calling submit_input
+                # Ensure parent_widget is not None before calling submit_input
+                self.parent_widget.submit_input()
         else:
             # Adjust the height of the text box based on its content
             doc_height = self.document().size().height()
@@ -180,7 +171,12 @@ class ChatBotUI(QWidget):
         # Set the initial size of the widget
         screen = QApplication.primaryScreen()  # Get the primary screen
         screen_size = screen.geometry()  # Get the screen geometry
-        width, height = 670, screen_size.height() - 100  # Set width to screen width and height to screen height minus a small margin
+        # Set width to screen width and height to screen height minus a small
+        # margin
+        width, height = (
+            670,
+            screen_size.height() - 100,
+        )
         self.setMaximumWidth(width)
         self.resize(width, height)
 
@@ -195,7 +191,8 @@ class ChatBotUI(QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area_widget_contents = QWidget(self.scroll_area)
         self.scroll_area.setWidget(self.scroll_area_widget_contents)
-        self.scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.scroll_area.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.scroll_area_layout = QVBoxLayout(
             self.scroll_area_widget_contents
@@ -213,9 +210,7 @@ class ChatBotUI(QWidget):
             '<html><head/><body><p align="center"><span style=" font-size:24pt;">'
             "Welcome to USD Chat ✨</span></p>"
             '<p align="center"><span style=" font-size:14pt;">Your AI-powered USD Chat assistant!</span></p>'
-            "</body></html>",
-            self.scroll_area_widget_contents,
-        )
+            "</body></html>", self.scroll_area_widget_contents, )
         self.welcome_label.setAlignment(Qt.AlignCenter)
         self.welcome_label.setStyleSheet("background:transparent;")
         self.welcome_label.adjustSize()  # Adjust the size of the label based on its content
@@ -253,7 +248,8 @@ class ChatBotUI(QWidget):
         # self.submit_button.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
 
         buttons_widget = QWidget()
-        buttons_layout = QHBoxLayout(buttons_widget)  # Assign the layout to a widget
+        # Assign the layout to a widget
+        buttons_layout = QHBoxLayout(buttons_widget)
         buttons_layout.addWidget(self.submit_button)
         buttons_widget.setSizePolicy(
             QSizePolicy.Expanding, QSizePolicy.Fixed
@@ -274,12 +270,18 @@ class ChatBotUI(QWidget):
     def sizeHint(self):
         screen = QApplication.primaryScreen()  # Get the primary screen
         screen_size = screen.geometry()  # Get the screen geometry
-        height = screen_size.height() - 100  # Set height to screen height minus a small margin
+        height = (
+            screen_size.height() - 100
+        )  # Set height to screen height minus a small margin
         return QSize(500, height)
 
     def load_stylesheet(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(current_dir, "..", "resources", "cyberpunk.qss")
+        file_path = os.path.join(
+            current_dir,
+            "..",
+            "resources",
+            "cyberpunk.qss")
         file = QFile(file_path)
         if file.open(QFile.ReadOnly | QFile.Text):
             stream = QTextStream(file)
@@ -299,8 +301,8 @@ class ChatBotUI(QWidget):
             self.append_message(user_input, "user")  # Pass plain text now
 
             self.temp_bot_message = self.append_message(
-                                    """<div><b><span>🤖 USDChat</span></b></div><hr>""", "bot"
-                                    )
+                """<div><b><span>🤖 USDChat</span></b></div><hr>""", "bot"
+            )
 
             QApplication.processEvents()  # Process all pending events, including UI updates
 
@@ -316,7 +318,8 @@ class ChatBotUI(QWidget):
     def update_chat_ui(self, bot_response):
         try:
             # Update the text of the temporary bot message bubble
-            self.temp_bot_message.update_text(bot_response)  # Pass plain text now
+            self.temp_bot_message.update_text(
+                bot_response)  # Pass plain text now
         except AttributeError as e:
             logging.error(f"Could not update message in UI due to error: {e}")
 
@@ -341,4 +344,3 @@ class ChatBotUI(QWidget):
         if not visible:
             global active_chat_ui_instance
             active_chat_ui_instance = None
-
