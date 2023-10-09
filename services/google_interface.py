@@ -3,9 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 from googlesearch import search
 
-from USDChat.utils.utils import get_model
+from USDChat.config import Config
 
-from .document_embedding import query_agent, query_agent_stream
+from .document_embedding import query_agent_stream
 
 
 def get_page_text(url):
@@ -121,7 +121,7 @@ def trim_text(text, start_index=450, length=1500):
 def google_agent(prompt, cutoff=6):
     try:
         completion = openai.ChatCompletion.create(
-            model=get_model(), temperature=0, messages=[
+            model=Config.MODEL, temperature=0, messages=[
                 {
                     "role": "system", "content": (
                         "You analyze a user's input to a large language model with "

@@ -20,9 +20,9 @@ from scipy.spatial import distance_matrix
 from striprtf.striprtf import rtf_to_text
 from text_to_speech import text_to_speech
 
-from USDChat.utils.utils import get_model
+from USDChat.config import Config
 
-openai.api_key = os.getenv("OPENAI_API_KEY")
+openai.api_key = Config.OPEN_AI_API_KEY
 
 
 # Takes a path to a PDF and returns the text contents
@@ -329,7 +329,7 @@ def folder_paths(directory):
 
 def summary_agent(prompt):
     completion = openai.ChatCompletion.create(
-        model=get_model(),
+        model=Config.MODEL,
         temperature=0.5,
         messages=[
             {
@@ -347,7 +347,7 @@ def summary_agent(prompt):
 
 def query_agent(prompt):
     completion = openai.ChatCompletion.create(
-        model=get_model(),
+        model=Config.MODEL,
         temperature=0,
         messages=[
             {
@@ -367,7 +367,7 @@ def query_agent(prompt):
 
 def query_agent_stream(prompt, delay_time=0.01, speech=False):
     completion = openai.ChatCompletion.create(
-        model=get_model(),
+        model=Config.MODEL,
         temperature=0,
         stream=True,
         messages=[
@@ -405,7 +405,7 @@ def query_agent_stream(prompt, delay_time=0.01, speech=False):
 def doc_agent(prompt):
     prompt = prompt + " " + str(folder_paths("./docs"))
     completion = openai.ChatCompletion.create(
-        model=get_model(),
+        model=Config.MODEL,
         temperature=0,
         messages=[
             {

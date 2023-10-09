@@ -1,18 +1,16 @@
 import logging
 import os
-import sys
 
-from PySide6.QtCore import (QFile, QSize, Qt, QTextStream, QTimer, QUrl,
-                            Signal, Slot)
-from PySide6.QtGui import (QBrush, QColor, QFont, QLinearGradient, QPainter,
-                           QPalette, QTextOption)
-from PySide6.QtWidgets import (QApplication, QDockWidget, QHBoxLayout, QLabel,
-                               QMainWindow, QPushButton, QScrollArea,
-                               QSizePolicy, QTextEdit, QVBoxLayout, QWidget)
+from PySide6.QtCore import QFile, QSize, Qt, QTextStream, QTimer, Signal
+from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter
+from PySide6.QtWidgets import (QApplication, QHBoxLayout, QLabel, QPushButton,
+                               QScrollArea, QSizePolicy, QTextEdit,
+                               QVBoxLayout, QWidget)
 
 from USDChat.chat_bot import Chat
 from USDChat.chat_bridge import ChatBridge
-from USDChat.utils.utils import get_model
+from USDChat.config import Config
+from USDChat.utils import chat_thread
 
 logging.basicConfig(
     filename="app.log",
@@ -53,9 +51,15 @@ class MessageBubble(QWidget):
         if self.sender == "user":
             gradient.setColorAt(0, QColor("#993366"))  # Darker Pink
             gradient.setColorAt(1, QColor("#663366"))  # Darker Purple
-        else:
+        elif self.sender == "bot":
             gradient.setColorAt(0, QColor("#336699"))  # Darker Cyan
             gradient.setColorAt(1, QColor("#336666"))  # Darker Teal
+        elif self.sender == "python_bot":
+            gradient.setColorAt(0, QColor("#336633"))  # Darker Green
+            gradient.setColorAt(1, QColor("#226622"))  # Even Darker Green
+        else:
+            raise ValueError(
+                "Sender must be either 'user', 'bot', or 'python_bot'")
 
         painter.setBrush(QBrush(gradient))
         painter.setPen(Qt.NoPen)  # No border outline
@@ -92,8 +96,23 @@ class MessageBubble(QWidget):
                 f"{formatted_text}"
                 f"</div>"
             )
+        elif self.sender == "python_bot":
+            formatted_response = (
+                f"<div style='"
+                f"border: 2px solid #444;"  # Border styling with darker color for visibility
+                f"padding: 10px;"  # Padding inside the border
+                f"margin: 5px 0;"  # Margin outside the border
+                f"border-radius: 10px;"  # Rounded corners
+                # No background color (transparent)
+                f"background-color: transparent;"
+                f"'>"
+                f"{formatted_text}"
+                f"</div>"
+            )
         else:
-            raise ValueError("Sender must be either 'user' or 'bot'")
+            raise ValueError(
+                "Sender must be either 'user', 'bot', or 'python_bot'")
+
         return formatted_response
 
     def update_text(self, new_text):
@@ -154,13 +173,17 @@ class AutoResizingTextEdit(QTextEdit):
 
 class ChatBotUI(QWidget):
     signal_user_message = Signal(str)
+    signal_error_message = Signal(str)
 
-    def __init__(self, parent=None):
+    def __init__(self, usdviewApi, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("USD Chat")
-        self.language_model = get_model()
+        self.usdviewApi = usdviewApi
+        self.setWindowTitle(Config.APP_NAME)
+        self.language_model = Config.MODEL
         self.chat_bot = Chat(self.language_model)
-        self.chat_bridge = ChatBridge(self.chat_bot, self)
+        self.chat_bridge = ChatBridge(self.chat_bot, self, self.usdviewApi)
+        self.chat_thread = chat_thread.ChatThread(
+            self.chat_bot, "", self.usdviewApi)
 
         self.init_ui()
         self.load_stylesheet()
@@ -182,7 +205,10 @@ class ChatBotUI(QWidget):
 
     def connectSignals(self):
         self.signal_user_message.connect(self.chat_bridge.get_bot_response)
-        self.chat_bridge.signal_bot_response.connect(self.update_chat_ui)
+        self.chat_bridge.signal_bot_response.connect(self.append_bot_response)
+        self.chat_thread.signal_python_exection_response.connect(
+            self.append_python_output
+        )
 
     def init_ui(self):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -301,7 +327,7 @@ class ChatBotUI(QWidget):
             self.append_message(user_input, "user")  # Pass plain text now
 
             self.temp_bot_message = self.append_message(
-                """<div><b><span>🤖 USDChat</span></b></div><hr>""", "bot"
+                """<div><b><span>🤖 USD Chat</span></b></div><hr>""", "bot"
             )
 
             QApplication.processEvents()  # Process all pending events, including UI updates
@@ -315,16 +341,30 @@ class ChatBotUI(QWidget):
         except Exception as e:
             logging.error(f"An error occurred: {e}")
 
-    def update_chat_ui(self, bot_response):
+    def append_bot_response(self, bot_response):
         try:
-            # Update the text of the temporary bot message bubble
             self.temp_bot_message.update_text(
                 bot_response)  # Pass plain text now
         except AttributeError as e:
             logging.error(f"Could not update message in UI due to error: {e}")
 
+    def append_python_output(self, python_output, success, all_responses):
+        if not python_output:
+            return
+        python_bot_message = self.append_message(
+            """<div><b><span>🐍 Python Output</span></b></div><hr>""", "python_bot")
+        python_bot_message.update_text(python_output)
+
+        if not success:
+            python_bot_message.update_text(
+                "\n\nAttempting to fix the error...")
+            self.temp_bot_message = self.append_message(
+                """<div><b><span>🤖 USD Chat</span></b></div><hr>""", "bot"
+            )
+            self.signal_user_message.emit(f"{all_responses}\n {python_output}")
+
     def scroll_to_end(self):
-        QTimer.singleShot(0, self._scroll_to_end)
+        QTimer.singleShot(50, self._scroll_to_end)
 
     def _scroll_to_end(self):
         self.scroll_area.verticalScrollBar().setValue(
@@ -344,3 +384,8 @@ class ChatBotUI(QWidget):
         if not visible:
             global active_chat_ui_instance
             active_chat_ui_instance = None
+
+    def closeEvent(self, event):
+        if self.chat_bot.full_message_history:  # Check if there's anything to save
+            self.chat_bot.save_session_log()
+        event.accept()  # Accept the close event

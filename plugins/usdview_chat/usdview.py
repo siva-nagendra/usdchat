@@ -1,19 +1,40 @@
-import os
-import sys
+import logging
+import threading
 
 from pxr import Tf
 from pxr.Usdviewq.plugin import PluginContainer
-from PySide6 import QtCore, QtWidgets
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
-from PySide6.QtWidgets import (QApplication, QDockWidget, QLabel, QPushButton,
-                               QSizePolicy, QVBoxLayout, QWidget)
+from PySide6.QtWidgets import QDockWidget, QPushButton, QSizePolicy
 
-from views import chat_widget
+from USDChat.views import chat_widget
 
-sys.path.append(os.path.join(os.path.dirname(__file__), "..", ".."))
+logging.basicConfig(level=logging.INFO)
+
 
 active_chat_ui_instance = None
+
+
+class USDViewAPIManager:
+    __instance = None
+    __lock = threading.Lock()
+    __initialized_event = threading.Event()  # New line
+
+    @staticmethod
+    def getInstance():
+        with USDViewAPIManager.__lock:
+            if USDViewAPIManager.__instance is None:
+                raise Exception("usdviewApi not initialized yet")
+            return USDViewAPIManager.__instance
+
+    @staticmethod
+    def setInstance(usdviewApi):
+        with USDViewAPIManager.__lock:
+            if USDViewAPIManager.__instance is None:
+                USDViewAPIManager.__instance = usdviewApi
+                USDViewAPIManager.__initialized_event.set()  # New line
+            else:
+                raise Exception("usdviewApi already initialized")
 
 
 def onStartup(usdviewApi):
@@ -22,11 +43,12 @@ def onStartup(usdviewApi):
 
 class USDChatPluginContainer(PluginContainer):
     def registerPlugins(self, plugRegistry, usdviewApi):
-        # Register command plugin to create and show ChatWidget
+        # Initialize the singleton here
+        USDViewAPIManager.setInstance(usdviewApi)
         self._load_chat_widget = plugRegistry.registerCommandPlugin(
             "USDChatPluginContainer.load_chat_widget",
             "Load Chat Widget",
-            lambda usdviewApi: load_chat_widget(usdviewApi),
+            load_chat_widget,  # Use partial here
         )
         onStartup(usdviewApi)
 
@@ -64,12 +86,17 @@ class CollapsibleDockWidget(QDockWidget):
             self._preferred_size = self.widget().size()
 
 
-def load_chat_widget(usdviewApi):
+def load_chat_widget(usdviewApi=None):
     global active_chat_ui_instance
+
+    if usdviewApi is None:
+        usdviewApi = USDViewAPIManager.getInstance()
 
     if active_chat_ui_instance is None or not active_chat_ui_instance.isVisible():
         active_chat_ui_instance = chat_widget.ChatBotUI(
-            parent=usdviewApi.qMainWindow)
+            usdviewApi, parent=usdviewApi.qMainWindow
+        )
+
         dock_widget = CollapsibleDockWidget(
             "🤖 USDChat", usdviewApi.qMainWindow)
         dock_widget.setWidget(active_chat_ui_instance)
@@ -85,6 +112,3 @@ def load_chat_widget(usdviewApi):
 
 
 Tf.Type.Define(USDChatPluginContainer)
-
-if __name__ == "__main__":
-    QtWidgets.QApplication.setAttribute(QtCore.Qt.AA_EnableHighDpiScaling)

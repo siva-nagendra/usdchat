@@ -7,7 +7,7 @@ from USDChat.views.chat_widget import ChatBotUI
 
 def main():
     app = QApplication(sys.argv)
-    chat_ui = ChatBotUI()
+    chat_ui = ChatBotUI(usdviewApi=None)
     chat_ui.show()
     sys.exit(app.exec())
 
