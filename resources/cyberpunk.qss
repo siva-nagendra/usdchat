@@ -7,28 +7,10 @@ QWidget {
 /* User Input Styles */
 QTextEdit#user_input {
     background-color: #1C1C1C;
-    color: #00FF00;  /* Neon Green Text */
-    border: 2px solid #FF8C00;
+    color: #aecc18;  /* More Yellowish-Green Text */
+    border: 2px solid #95652a;
     padding: 3px;
     border-radius: 10px;
-}
-
-/* Submit Button Styles */
-QPushButton#submit_button {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FF416C, stop:1 #FF4B2B);  /* Neon gradient */
-    color: #ffffff;
-    border: none;
-    padding: 5px 10px;
-    border-radius: 5px;
-    font-weight: bold;
-}
-
-QPushButton#submit_button:pressed {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FF4B2B, stop:1 #FF416C);  /* Inverted Neon gradient */
-}
-
-QPushButton#submit_button:hover {
-    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #FF8C00, stop:1 #FF416C);  /* Modified Neon gradient */
 }
 
 /* Message Styles */
@@ -47,4 +29,67 @@ QLabel#user_message {
 QLabel#bot_message {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #00FF00, stop:1 #008C00);  /* Green Neon gradient */
     color: #1C1C1C;
+}
+
+/* Scrollbar Styles */
+QScrollBar:vertical {
+    border: 2px solid #151515;
+    background: #1C1C1C;
+    width: 12px;
+    margin: 15px 3px 15px 3px;
+    border-radius: 4px;
+}
+
+/* Submit Button Styles */
+QPushButton#submit_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #889933, stop:1 #668822);  /* More Yellowish-Green */
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton#submit_button:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #668822, stop:1 #889933);  /* Inverted More Yellowish-Green */
+}
+
+QPushButton#submit_button:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #889933, stop:1 #889944);  /* Modified More Yellowish-Green */
+}
+
+/* Submit Button Styles when "Stop" */
+QPushButton#submit_button[stopMode="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #993333, stop:1 #994422);  /* Red to Orange-ish */
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton#submit_button[stopMode="true"]:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #994422, stop:1 #993333);  /* Inverted Red to Orange-ish */
+}
+
+QPushButton#submit_button[stopMode="true"]:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #993333, stop:1 #995544);  /* Modified Red to Orange-ish */
+}
+
+/* clear_chat_button Styles */
+QPushButton {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #707070, stop:1 #606060);  /* Inverted Muted Grey */
+}
+
+QPushButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
 }

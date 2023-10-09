@@ -14,12 +14,24 @@ class ChatBridge(QObject):
         self.chat_threads = []
 
     def get_bot_response(self, user_input):
-        chat_thread = ChatThread(self.chat_bot, user_input, self.usdviewApi)
+        if user_input == "clear":
+            self.chat_widget.clear_chat_ui()
+            return
+
+        chat_thread = ChatThread(self.chat_bot, self.chat_widget, user_input, self.usdviewApi)
         self.chat_threads.append(
             chat_thread
-        )  # Keep a reference to prevent garbage collection
+        ) 
         chat_thread.signal_bot_response.connect(self.signal_bot_response)
         chat_thread.signal_python_exection_response.connect(
             self.chat_widget.append_python_output
-        )  # Add this line
+        )
         chat_thread.start()
+
+    
+    def clean_up_thread(self):
+        if self.chat_threads:
+            last_thread = self.chat_threads[-1]
+            last_thread.stop()
+            last_thread.quit()
+            last_thread.wait()
