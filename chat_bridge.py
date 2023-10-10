@@ -61,6 +61,7 @@ class ChatBridge(QObject):
     def on_python_execution_response(self, python_output, success):
         if success:
             self.current_attempts = 0
+            self.chat_widget.enable_send_button()
         else:
             self.current_attempts += 1
         print("on_python_execution_response", python_output, success)
@@ -68,6 +69,7 @@ class ChatBridge(QObject):
         if self.current_attempts >= self.max_attempts:
             self.current_attempts = 0  # Reset counter
             self.signal_user_message.emit("stop")
+            self.chat_widget.enable_send_button()
         self.conversation_manager.append_message(
             {
                 "role": "assistant",
@@ -80,6 +82,7 @@ class ChatBridge(QObject):
         self.conversation_manager.append_message(
             {"role": "assistant", "content": response}
         )
+        self.chat_widget.enable_send_button()
 
     def clean_up_thread(self):
         if self.chat_threads:
