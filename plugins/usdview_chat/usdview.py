@@ -97,11 +97,9 @@ def load_chat_widget(usdviewApi=None):
             usdviewApi, parent=usdviewApi.qMainWindow
         )
 
-        dock_widget = CollapsibleDockWidget(
-            "🤖 USDChat", usdviewApi.qMainWindow)
+        dock_widget = CollapsibleDockWidget("🤖 USDChat", usdviewApi.qMainWindow)
         dock_widget.setWidget(active_chat_ui_instance)
-        usdviewApi.qMainWindow.addDockWidget(
-            Qt.RightDockWidgetArea, dock_widget)
+        usdviewApi.qMainWindow.addDockWidget(Qt.RightDockWidgetArea, dock_widget)
         dock_widget.show()
 
         # Added Expanding size policy to dock_widget

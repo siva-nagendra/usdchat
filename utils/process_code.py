@@ -35,23 +35,19 @@ def process_chat_responses(messages, usdviewApi):
         logging.info(f"Processed code: {code_to_run}")
         print("code_to_run", code_to_run)
 
-        output, success = execute_python_code(
-            final_code, usdviewApi
-        )  # Capture both output and success flag
+        output, success = execute_python_code(final_code, usdviewApi)
 
-        return output, success  # Return both output and success flag
+        return output, success
 
     return (
         accumulated_text,
         True,
-    )  # No code was executed, so technically, it's a "success"
+    )
 
 
 def execute_python_code(code_to_run, usdviewApi):
-    logging.info(
-        "Attempting to execute Python code in usdview's Python environment.")
+    logging.info("Attempting to execute Python code in usdview's Python environment.")
 
-    # Initialize a StringIO buffer to capture stdout and stderr
     old_stdout, old_stderr = sys.stdout, sys.stderr
     new_stdout, new_stderr = io.StringIO(), io.StringIO()
     sys.stdout, sys.stderr = new_stdout, new_stderr
@@ -61,17 +57,13 @@ def execute_python_code(code_to_run, usdviewApi):
 
     logging.info(f"Code being passed to interpreter: {code_to_run}")
 
-    # Execute the code
     python_console.runcode(code_to_run)
 
-    # Restore original stdout and stderr
     sys.stdout, sys.stderr = old_stdout, old_stderr
 
-    # Get the content of the redirected stdout and stderr
     stdout_content = new_stdout.getvalue()
     stderr_content = new_stderr.getvalue()
 
-    # Close the StringIO objects
     new_stdout.close()
     new_stderr.close()
 

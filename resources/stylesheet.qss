@@ -8,7 +8,7 @@ QWidget {
 QTextEdit#user_input {
     background-color: #1C1C1C;
     color: #aecc18;  /* More Yellowish-Green Text */
-    border: 2px solid #95652a;
+    border: 0px solid #95652a;
     padding: 3px;
     border-radius: 10px;
 }
@@ -33,7 +33,7 @@ QLabel#bot_message {
 
 /* Scrollbar Styles */
 QScrollBar:vertical {
-    border: 2px solid #151515;
+    border: 0px solid #151515;
     background: #1C1C1C;
     width: 12px;
     margin: 15px 3px 15px 3px;
@@ -92,4 +92,46 @@ QPushButton:pressed {
 
 QPushButton:hover {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
+}
+
+/* Temp Slider Styles */
+QSlider::groove:horizontal {
+    border: 0px solid #151515;
+    height: 6px;
+    background: #1C1C1C;
+    border-radius: 4px;
+}
+
+QSlider::handle:horizontal {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #889933, stop:1 #889933);  /* Neon gradient */
+    border: 0px solid #95652a;  /* Brighter border color */
+    width: 7px;
+    border-radius: 10px;
+    margin: -5px 0; /* Expand outside the groove */
+}
+
+/* Browse Button Styles */
+QPushButton#browse_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton#browse_button:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #707070, stop:1 #606060);  /* Inverted Muted Grey */
+}
+
+QPushButton#browse_button:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
+}
+
+/* Working Directory LineEdit Styles */
+QLineEdit#working_dir_line_edit {
+    background-color: #1C1C1C;
+    color: #474747;  /* More Yellowish-Green Text */
+    padding: 3px;
+    border-radius: 10px;
 }
