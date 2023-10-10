@@ -5,15 +5,14 @@ from PySide6.QtCore import QFile, QSize, Qt, QTextStream, QTimer, Signal
 from PySide6.QtWidgets import (
     QApplication,
     QHBoxLayout,
-    QLabel,
     QPushButton,
     QScrollArea,
     QSizePolicy,
     QTextEdit,
     QVBoxLayout,
     QWidget,
-    QSpacerItem,
 )
+from PySide6.QtGui import QClipboard
 
 from USDChat.views.chat_bubble import ChatBubble
 from USDChat.chat_bot import Chat
@@ -23,6 +22,7 @@ from USDChat.utils import chat_thread
 from USDChat.utils.conversation_manager import ConversationManager
 from USDChat.utils import process_code
 from USDChat.views.welcome_screen import init_welcome_screen
+
 logging.basicConfig(level=logging.WARNING)
 
 
@@ -35,7 +35,11 @@ class AutoResizingTextEdit(QTextEdit):
     def keyPressEvent(self, event):
         super().keyPressEvent(event)
 
-        if event.modifiers() & Qt.ShiftModifier and event.key() == Qt.Key_Return:
+        if event.modifiers() == Qt.ControlModifier and event.key() == Qt.Key_C:
+            selected_text = self.textCursor().selectedText()
+            clipboard = QApplication.clipboard()
+            clipboard.setText(selected_text)
+        elif event.modifiers() & Qt.ShiftModifier and event.key() == Qt.Key_Return:
             new_height = self.height() + 20
             max_height = self.fontMetrics().lineSpacing() * 15 + 10
             new_height = min(new_height, max_height)
