@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="USDChat",
+    name="usdchat",
     version="0.1",
     packages=find_packages(),
     install_requires=[
@@ -15,12 +15,12 @@ setup(
         ]
     },
     include_package_data=True,
-    description="USDChat is an expert AI assistant in Pixar OpenUSD, \
+    description="usdchat is an expert AI assistant in Pixar OpenUSD, \
                 capable of coding, chatting, editing 3D scenes, \
                 fetching stage info, and interacting with usdview.",
     long_description=open("README.md").read(),
     long_description_content_type="text/markdown",
-    url="https://github.com/siva-nagendra/USDChat",
+    url="https://github.com/siva-nagendra/usdchat",
     author="Siva Nagendra Savarapu",
     author_email="siva_nagendra@outlook.com",
     classifiers=[

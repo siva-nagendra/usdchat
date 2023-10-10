@@ -7,7 +7,7 @@ from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QDockWidget, QPushButton, QSizePolicy
 
-from USDChat.views import chat_widget
+from usdchat.views import chat_widget
 
 logging.basicConfig(level=logging.INFO)
 
@@ -18,7 +18,7 @@ active_chat_ui_instance = None
 class USDViewAPIManager:
     __instance = None
     __lock = threading.Lock()
-    __initialized_event = threading.Event()  # New line
+    __initialized_event = threading.Event()
 
     @staticmethod
     def getInstance():
@@ -32,7 +32,7 @@ class USDViewAPIManager:
         with USDViewAPIManager.__lock:
             if USDViewAPIManager.__instance is None:
                 USDViewAPIManager.__instance = usdviewApi
-                USDViewAPIManager.__initialized_event.set()  # New line
+                USDViewAPIManager.__initialized_event.set()
             else:
                 raise Exception("usdviewApi already initialized")
 
@@ -43,19 +43,16 @@ def onStartup(usdviewApi):
 
 class USDChatPluginContainer(PluginContainer):
     def registerPlugins(self, plugRegistry, usdviewApi):
-        # Initialize the singleton here
         USDViewAPIManager.setInstance(usdviewApi)
         self._load_chat_widget = plugRegistry.registerCommandPlugin(
             "USDChatPluginContainer.load_chat_widget",
             "Load Chat Widget",
-            load_chat_widget,  # Use partial here
+            load_chat_widget,
         )
         onStartup(usdviewApi)
 
     def configureView(self, plugRegistry, plugUIBuilder):
-        # Create or find the USDChat menu
         usdchat_menu = plugUIBuilder.findOrCreateMenu("🤖 USDChat")
-        # Add the command plugin to the menu
         usdchat_menu.addItem(self._load_chat_widget)
 
 
@@ -68,18 +65,16 @@ class CollapsibleDockWidget(QDockWidget):
         self.toggle_button.clicked.connect(self.toggle_content)
         self.setTitleBarWidget(self.toggle_button)
         self._content_visible = True
-        self._preferred_size = None  # Store the preferred size
+        self._preferred_size = None
 
     def toggle_content(self):
         self._content_visible = not self._content_visible
         self.widget().setVisible(self._content_visible)
         if self._content_visible:
             self.toggle_button.setText("🤖 USDChat")
-            self.toggle_button.setFont(
-                QFont("Sans-serif", 12)
-            )  # Resetting to a standard font size
+            self.toggle_button.setFont(QFont("Sans-serif", 12))
             if self._preferred_size:
-                self.widget().resize(self._preferred_size)  # Restore the preferred size
+                self.widget().resize(self._preferred_size)
         else:
             self.toggle_button.setText("🤖")
             self.toggle_button.setFont(QFont("Sans-serif", 35))
@@ -102,7 +97,6 @@ def load_chat_widget(usdviewApi=None):
         usdviewApi.qMainWindow.addDockWidget(Qt.RightDockWidgetArea, dock_widget)
         dock_widget.show()
 
-        # Added Expanding size policy to dock_widget
         dock_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
     else:

@@ -1,5 +1,5 @@
 from PySide6.QtCore import QThread, Signal
-from USDChat import chat_bridge
+from usdchat import chat_bridge
 
 
 class ChatThread(QThread):

@@ -2,16 +2,16 @@ import os
 
 
 class Config:
-    APP_NAME = "USDChat"
-    # MODEL = "gpt-4"
-    MODEL = "gpt-3.5-turbo-0613"
+    APP_NAME = "usdchat"
+    MODEL = "gpt-4"
+    # MODEL = "gpt-3.5-turbo-0613"
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     MAX_TOKENS = 500
     TEMP = 0
     MAX_MEMORY = 10
     MAX_ATTEMPTS = 4
     WORKING_DIRECTORY = "/tmp"
-    SYSTEM_MESSAGE = f"""USDChat is your expert assistant in Pixar OpenUSD and advanced Computer Graphics AI, 
+    SYSTEM_MESSAGE = f"""Usdchat is your expert assistant in Pixar OpenUSD and advanced Computer Graphics AI, 
                     capable of coding, chatting, editing 3D scenes, fetching stage info, and interacting with usdview.
                     Access and modify the current USD stage and properties via usdviewApi.
                     Key usdviewApi properties/methods:

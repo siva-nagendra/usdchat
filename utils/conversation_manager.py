@@ -1,7 +1,8 @@
 import json
 import os
+import logging
 from datetime import datetime
-from USDChat.config import Config
+from usdchat.config import Config
 
 
 class ConversationManager:
@@ -72,7 +73,7 @@ class ConversationManager:
                         else:
                             self.conversation = all_conversations
             except (UnicodeDecodeError, json.JSONDecodeError):
-                print(
+                logging.error(
                     "Error decoding the file. Starting with an empty conversation list."
                 )
                 self.conversation = []
@@ -86,7 +87,7 @@ class ConversationManager:
             json.dump(self.conversation, f, indent=2)
 
     def append_message(self, message):
-        print(f"Appending message: {message}")
+        logging.info(f"Appending message: {message}")
         self.conversation.append(message)
         self.save()
 

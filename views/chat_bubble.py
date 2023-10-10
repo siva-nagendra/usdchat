@@ -12,12 +12,12 @@ from PySide6.QtWidgets import (
 logging.basicConfig(level=logging.WARNING)
 
 
-
 class ChatBubble(QWidget):
-    def __init__(self, text, sender, parent=None):
+    def __init__(self, text, sender, success=True, parent=None):
         super().__init__(parent)
         self.sender = sender
         self.current_text = ""
+        self.success = success
         self.init_ui()
         self.update_text(text)
 
@@ -47,8 +47,12 @@ class ChatBubble(QWidget):
             gradient.setColorAt(0, QColor("#336699"))  # Darker Cyan
             gradient.setColorAt(1, QColor("#336666"))  # Darker Teal
         elif self.sender == "python_bot":
-            gradient.setColorAt(0, QColor("#336633"))  # Darker Green
-            gradient.setColorAt(1, QColor("#226622"))  # Even Darker Green
+            if self.success:
+                gradient.setColorAt(0, QColor("#336633"))  # Darker Green
+                gradient.setColorAt(1, QColor("#226622"))  # Even Darker Green
+            else:
+                gradient.setColorAt(0, QColor("#993333"))  # Dark Red
+                gradient.setColorAt(1, QColor("#994422"))  # Orange-ish Red
         else:
             raise ValueError("Sender must be either 'user', 'bot', or 'python_bot'")
 

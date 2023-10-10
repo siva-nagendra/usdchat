@@ -1,7 +1,8 @@
+import logging
 from PySide6.QtCore import QObject, Signal
-from USDChat.utils.chat_thread import ChatThread
-from USDChat.utils.conversation_manager import ConversationManager
-from USDChat.config import Config
+from usdchat.utils.chat_thread import ChatThread
+from usdchat.utils.conversation_manager import ConversationManager
+from usdchat.config import Config
 
 
 class ChatBridge(QObject):
@@ -15,8 +16,6 @@ class ChatBridge(QObject):
         self.usdviewApi = usdviewApi
         self.chat_threads = []
         self.conversation_manager = ConversationManager()
-        self.max_attempts = Config.MAX_ATTEMPTS
-        self.current_attempts = 0
 
     def get_bot_response(self, user_input):
         if user_input == "clear":
@@ -59,17 +58,6 @@ class ChatBridge(QObject):
         return messages
 
     def on_python_execution_response(self, python_output, success):
-        if success:
-            self.current_attempts = 0
-            self.chat_widget.enable_send_button()
-        else:
-            self.current_attempts += 1
-        print("on_python_execution_response", python_output, success)
-
-        if self.current_attempts >= self.max_attempts:
-            self.current_attempts = 0  # Reset counter
-            self.signal_user_message.emit("stop")
-            self.chat_widget.enable_send_button()
         self.conversation_manager.append_message(
             {
                 "role": "assistant",
@@ -78,7 +66,7 @@ class ChatBridge(QObject):
         )
 
     def on_bot_full_response(self, response):
-        print("on_bot_full_response", response)
+        logging.info("on_bot_full_response", response)
         self.conversation_manager.append_message(
             {"role": "assistant", "content": response}
         )

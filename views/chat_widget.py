@@ -12,16 +12,15 @@ from PySide6.QtWidgets import (
     QVBoxLayout,
     QWidget,
 )
-from PySide6.QtGui import QClipboard
 
-from USDChat.views.chat_bubble import ChatBubble
-from USDChat.chat_bot import Chat
-from USDChat.chat_bridge import ChatBridge
-from USDChat.config import Config
-from USDChat.utils import chat_thread
-from USDChat.utils.conversation_manager import ConversationManager
-from USDChat.utils import process_code
-from USDChat.views.welcome_screen import init_welcome_screen
+from usdchat.views.chat_bubble import ChatBubble
+from usdchat.chat_bot import Chat
+from usdchat.chat_bridge import ChatBridge
+from usdchat.config import Config
+from usdchat.utils import chat_thread
+from usdchat.utils.conversation_manager import ConversationManager
+from usdchat.utils import process_code
+from usdchat.views.welcome_screen import init_welcome_screen
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -92,6 +91,8 @@ class ChatBotUI(QWidget):
         )
         self.setMaximumWidth(width)
         self.resize(width, height)
+        self.max_attempts = Config.MAX_ATTEMPTS
+        self.current_attempts = 0
 
     def connectSignals(self):
         self.signal_user_message.connect(self.chat_bridge.get_bot_response)
@@ -99,6 +100,7 @@ class ChatBotUI(QWidget):
         self.chat_bridge.signal_python_code_ready.connect(
             self.run_python_code_in_main_thread
         )
+        self.signal_user_message.connect(self.enable_stop_button)
 
     def init_ui(self):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -258,17 +260,20 @@ class ChatBotUI(QWidget):
         if not python_output:
             return
         python_bot_message = self.append_message(
-            """<div><b><span>🐍 Python Output</span></b></div><hr>""", "python_bot"
+            """<div><b><span>🐍 Python Output</span></b></div><hr>""",
+            "python_bot",
+            success=success,
         )
         python_bot_message.update_text(python_output)
-        self.scroll_to_end()
-
         if not success:
-            python_bot_message.update_text("\n\nAttempting to fix the error...")
+            python_bot_message.update_text(
+                f"\nAttempting to fix the error...\n{self.current_attempts}/{self.max_attempts}"
+            )
             self.temp_bot_message = self.append_message(
                 """<div><b><span>🤖 USD Chat</span></b></div><hr>""", "bot"
             )
             self.signal_user_message.emit(f"{all_responses}\n {python_output}")
+        self.scroll_to_end()
 
     def scroll_to_end(self):
         QTimer.singleShot(50, self._scroll_to_end)
@@ -278,8 +283,8 @@ class ChatBotUI(QWidget):
             self.scroll_area.verticalScrollBar().maximum()
         )
 
-    def append_message(self, content, sender):
-        chat_bubble = ChatBubble(content, sender)
+    def append_message(self, content, sender, success=True):
+        chat_bubble = ChatBubble(content, sender, success=success)
         alignment = Qt.AlignRight if sender == "user" else Qt.AlignLeft
         self.conversation_layout.addWidget(chat_bubble, alignment=alignment)
         self.conversation_layout.setAlignment(chat_bubble, alignment)
@@ -287,10 +292,20 @@ class ChatBotUI(QWidget):
         self.user_input.setFocus()
         return chat_bubble
 
-    def run_python_code_in_main_thread(self, code_to_run):
-        # Extract and run the Python code here.
-        python_code_snippets = process_code.extract_python_code(code_to_run)
-        for snippet in python_code_snippets:
-            output, success = process_code.execute_python_code(snippet, self.usdviewApi)
-            self.signal_python_execution_response.emit(output, success)
-            self.append_python_output(output, success, code_to_run)
+    def run_python_code_in_main_thread(self, all_responses):
+        output, success = process_code.process_chat_responses(
+            all_responses, self.usdviewApi
+        )
+        if success:
+            self.current_attempts = 0
+            self.enable_send_button()
+        else:
+            self.current_attempts += 1
+
+        if self.current_attempts >= self.max_attempts:
+            self.current_attempts = 0
+            self.signal_user_message.emit("stop")
+            self.enable_send_button()
+
+        self.append_python_output(output, success, all_responses)
+        self.signal_python_execution_response.emit(output, success)

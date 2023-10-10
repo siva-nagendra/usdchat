@@ -2,7 +2,47 @@ import io
 import logging
 import re
 import sys
+import importlib
 from code import InteractiveConsole as Console
+
+sub_modules = [
+    "Tf",
+    "Gf",
+    "Trace",
+    "Work",
+    "Plug",
+    "Vt",
+    "Ar",
+    "Kind",
+    "Sdf",
+    "Ndr",
+    "Sdr",
+    "Pcp",
+    "Usd",
+    "UsdGeom",
+    "UsdVol",
+    "UsdMedia",
+    "UsdShade",
+    "UsdLux",
+    "UsdProc",
+    "UsdRender",
+    "UsdHydra",
+    "UsdRi",
+    "UsdSkel",
+    "UsdUI",
+    "UsdUtils",
+    "UsdPhysics",
+    "UsdMtlx",
+    "Garch",
+    "CameraUtil",
+    "PxOsd",
+    "GeomUtil",
+    "Glf",
+    "UsdImagingGL",
+    "UsdAppUtils",
+    "Usdviewq",
+    "UsdBakeMtlx",
+]
 
 
 def extract_python_code(text):
@@ -33,7 +73,6 @@ def process_chat_responses(messages, usdviewApi):
         code_to_run = f'''exec("""\n{final_code}\n""")'''
 
         logging.info(f"Processed code: {code_to_run}")
-        print("code_to_run", code_to_run)
 
         output, success = execute_python_code(final_code, usdviewApi)
 
@@ -54,6 +93,14 @@ def execute_python_code(code_to_run, usdviewApi):
 
     python_console = Console()
     python_console.locals["usdviewApi"] = usdviewApi
+
+    # Dynamically import modules and add them to python_console.locals
+    for sub_module in sub_modules:
+        try:
+            module = importlib.import_module(f"pxr.{sub_module}")
+            python_console.locals[sub_module] = module
+        except ImportError:
+            logging.warning(f"Failed to import {sub_module}")
 
     logging.info(f"Code being passed to interpreter: {code_to_run}")
 

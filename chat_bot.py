@@ -1,7 +1,8 @@
 import time
 import openai
-from USDChat.config import Config
-from USDChat.error_handlers.openai_error_handler import handle_openai_error
+import logging
+from usdchat.config import Config
+from usdchat.error_handlers.openai_error_handler import handle_openai_error
 import traceback
 
 openai.api_key = Config.OPENAI_API_KEY
@@ -40,13 +41,13 @@ class Chat:
             return reply_content
         except openai.error.APIError as e:
             error_message = handle_openai_error(401)
-            print(f"OpenAI API Error: {error_message}")
+            logging.error(f"OpenAI API Error: {error_message}")
         except openai.error.APIConnectionError as e:
-            print("Failed to connect to OpenAI API.")
+            logging.error("Failed to connect to OpenAI API.")
         except openai.error.RateLimitError as e:
-            print("OpenAI API request exceeded rate limit.")
+            logging.error("OpenAI API request exceeded rate limit.")
         except openai.error.Timeout as e:
-            print("Request to OpenAI API timed out.")
+            logging.error("Request to OpenAI API timed out.")
         except Exception as e:
-            print(f"An exception occurred: {e}")
+            logging.error(f"An exception occurred: {e}")
             traceback.print_exc()
