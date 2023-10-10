@@ -9,26 +9,35 @@ class ChatBridge(QObject):
     signal_bot_response = Signal(str)
     signal_python_code_ready = Signal(str)
 
-    def __init__(self, chat_bot, chat_widget, usdviewApi):
+    def __init__(self, chat_bot, chat_widget, usdviewApi, conversation_manager=None):
         super().__init__()
         self.chat_bot = chat_bot
         self.chat_widget = chat_widget
         self.usdviewApi = usdviewApi
         self.chat_threads = []
-        self.conversation_manager = ConversationManager()
+        self.conversation_manager = (
+            conversation_manager if conversation_manager else ConversationManager()
+        )
+
+    @property
+    def conversation_manager(self):
+        return self._conversation_manager
+
+    @conversation_manager.setter
+    def conversation_manager(self, new_manager):
+        self._conversation_manager = new_manager
 
     def get_bot_response(self, user_input):
         if user_input == "clear":
-            self.chat_widget.clear_chat_ui()
+            self.clear_chat_ui()
+            self.chat_bridge = ChatBridge(self.chat_bot, self, self.usdviewApi)
             return
         elif user_input == "new session":
             self.conversation_manager.new_session()
 
         messages = self.get_messages()
 
-        self.conversation_manager.append_message(
-            {"role": "user", "content": user_input}
-        )
+        self.conversation_manager.append_to_log({"role": "user", "content": user_input})
 
         chat_thread = ChatThread(
             self.chat_bot, self.chat_widget, messages, self.usdviewApi
@@ -49,16 +58,10 @@ class ChatBridge(QObject):
 
     def get_messages(self):
         messages = self.conversation_manager.load()
-        if len(messages) == 0 or (
-            len(messages) > 0 and messages[0].get("role") != "system"
-        ):
-            self.conversation_manager.insert_message(
-                0, {"role": "system", "content": Config.SYSTEM_MESSAGE}
-            )
         return messages
 
     def on_python_execution_response(self, python_output, success):
-        self.conversation_manager.append_message(
+        self.conversation_manager.append_to_log(
             {
                 "role": "assistant",
                 "content": f"python_output: {python_output}, success: {success}",
@@ -67,7 +70,7 @@ class ChatBridge(QObject):
 
     def on_bot_full_response(self, response):
         logging.info("on_bot_full_response", response)
-        self.conversation_manager.append_message(
+        self.conversation_manager.append_to_log(
             {"role": "assistant", "content": response}
         )
         self.chat_widget.enable_send_button()

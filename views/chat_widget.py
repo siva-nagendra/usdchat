@@ -73,7 +73,7 @@ class ChatBotUI(QWidget):
         self.chat_thread = chat_thread.ChatThread(
             self.chat_bot, self, "", self.usdviewApi
         )
-        self.conversation_manager = ConversationManager()
+        self.conversation_manager = ConversationManager(new_session=True)
 
         self.init_ui()
         init_welcome_screen(self)
@@ -200,6 +200,7 @@ class ChatBotUI(QWidget):
 
         init_welcome_screen(self)
         self.conversation_manager.new_session()
+        self.chat_bridge.conversation_manager = self.conversation_manager
 
     def resizeEvent(self, event):
         self.scroll_area.updateGeometry()
@@ -272,7 +273,9 @@ class ChatBotUI(QWidget):
             self.temp_bot_message = self.append_message(
                 """<div><b><span>🤖 USD Chat</span></b></div><hr>""", "bot"
             )
-            self.signal_user_message.emit(f"{all_responses}\n {python_output}")
+            self.signal_user_message.emit(
+                f"{all_responses}\n\n\n I get the below error, please fix it. {python_output}"
+            )
         self.scroll_to_end()
 
     def scroll_to_end(self):
