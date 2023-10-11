@@ -1,8 +1,6 @@
 # 🤖 usdchat - Your Ultimate USD Sidekick 🌟
 
-Unlock the power of **Universal Scene Description (USD)** through natural language with **usdchat**! With the brains of OpenAI's large language models and seamless integration into your favorite USD authoring tools, this isn't just a chatbot—it's your next-level USD assistant. 🚀
-
-![Header](./resources/usdchat_header.png)
+usdchat is a conversational bot that lets you interact with USD Stage using natural language. Powered by OpenAI large language models, this AI assistant can answer you basic USD queries as well as a plugin to your favorite USD authoring toolsets. 🚀
 
 ## 🌈 What Can It Do?
 
