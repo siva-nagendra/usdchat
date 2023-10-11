@@ -77,7 +77,7 @@ QPushButton#submit_button[stopMode="true"]:hover {
 }
 
 /* clear_chat_button Styles */
-QPushButton {
+QPushButton#clear_chat_button {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
     color: #ffffff;
     border: none;
@@ -86,11 +86,11 @@ QPushButton {
     font-weight: bold;
 }
 
-QPushButton:pressed {
+QPushButton:pressed#clear_chat_button {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #707070, stop:1 #606060);  /* Inverted Muted Grey */
 }
 
-QPushButton:hover {
+QPushButton:hover#clear_chat_button {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
 }
 
@@ -134,4 +134,32 @@ QLineEdit#working_dir_line_edit {
     color: #474747;  /* More Yellowish-Green Text */
     padding: 3px;
     border-radius: 10px;
+}
+
+
+/* Welcome Screen Buttons */
+QPushButton {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1C1C1C, stop:1 #2D2D2D);  /* Background almost like the widget */
+    color: #AAAAAA;  /* Muted Text */
+    border: 1px solid #3A3A3A;  /* Slightly darker border */
+    padding: 5px;
+    border-radius: 5px;
+    font-weight: normal;
+}
+
+QPushButton:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #2D2D2D, stop:1 #1C1C1C);  /* Inverted Background */
+}
+
+QPushButton:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #1C1C1C, stop:1 #333333);  /* Slightly Brighter */
+}
+
+/* Frame for Welcome Screen Buttons */
+QFrame {
+    background-color: transparent;
+    border: 0px solid #3A3A3A;  /* Slightly darker border */
+    border-radius: 0px;
+    margin: 0px;  /* No margins */
+    padding: 0px;  /* No padding */
 }

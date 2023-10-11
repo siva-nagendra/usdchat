@@ -1,23 +1,20 @@
 import logging
 from PySide6.QtCore import QObject, Signal
 from usdchat.utils.chat_thread import ChatThread
-from usdchat.utils.conversation_manager import ConversationManager
-from usdchat.config import Config
 
 
 class ChatBridge(QObject):
     signal_bot_response = Signal(str)
     signal_python_code_ready = Signal(str)
 
-    def __init__(self, chat_bot, chat_widget, usdviewApi, conversation_manager=None):
+    def __init__(self, chat_bot, chat_widget, usdviewApi=None, conversation_manager=None, standalone=False):
         super().__init__()
         self.chat_bot = chat_bot
         self.chat_widget = chat_widget
+        self.standalone = standalone
         self.usdviewApi = usdviewApi
         self.chat_threads = []
-        self.conversation_manager = (
-            conversation_manager if conversation_manager else ConversationManager()
-        )
+        self.conversation_manager = conversation_manager
 
     @property
     def conversation_manager(self):
@@ -44,17 +41,14 @@ class ChatBridge(QObject):
         )
 
         self.chat_threads.append(chat_thread)
+        chat_thread.start()
 
         chat_thread.signal_bot_response.connect(self.signal_bot_response)
         chat_thread.signal_bot_full_response.connect(self.on_bot_full_response)
 
-        chat_thread.signal_python_code_ready.connect(self.signal_python_code_ready)
-
         self.chat_widget.signal_python_execution_response.connect(
             self.on_python_execution_response
         )
-
-        chat_thread.start()
 
     def get_messages(self):
         messages = self.conversation_manager.load()
@@ -70,6 +64,11 @@ class ChatBridge(QObject):
 
     def on_bot_full_response(self, response):
         logging.info("on_bot_full_response", response)
+        
+        if not self.standalone:
+            if "```python" in response and "```" in response:
+                self.signal_python_code_ready.emit(response)
+            
         self.conversation_manager.append_to_log(
             {"role": "assistant", "content": response}
         )

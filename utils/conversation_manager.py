@@ -2,18 +2,17 @@ import json
 import os
 import logging
 from datetime import datetime
-from usdchat.config import Config
 
 
 class ConversationManager:
     def __init__(
         self,
-        directory=f"{Config.WORKING_DIRECTORY}/message_logs",
         new_session=False,
-        max_memory=Config.MAX_MEMORY,
+        config=None,
     ):
+        self.config = config
+        directory=f"{self.config.WORKING_DIRECTORY}/message_logs"
         self.directory = directory
-        self.max_memory = max_memory
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
 
@@ -34,7 +33,7 @@ class ConversationManager:
         )
         self.file_path = os.path.join(self.directory, self.session_log_filename)
         with open(self.file_path, "w") as f:
-            json.dump([{"role": "system", "content": Config.SYSTEM_MESSAGE}], f)
+            json.dump([{"role": "system", "content": self.config.SYSTEM_MESSAGE}], f)
         self.conversation = self.load()
 
     def initialize_session(self):
@@ -55,7 +54,7 @@ class ConversationManager:
                     file_content = f.read()
                     if not file_content.strip():
                         self.conversation = [
-                            {"role": "system", "content": Config.SYSTEM_MESSAGE}
+                            {"role": "system", "content": self.config.SYSTEM_MESSAGE}
                         ]
                     else:
                         self.conversation = json.loads(file_content)

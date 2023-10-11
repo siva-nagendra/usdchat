@@ -1,7 +1,7 @@
 import time
 import openai
 import logging
-from usdchat.config import Config
+from config.config import Config
 from usdchat.error_handlers.openai_error_handler import handle_openai_error
 import traceback
 
@@ -9,13 +9,11 @@ openai.api_key = Config.OPENAI_API_KEY
 
 
 class Chat:
-    def __init__(self, model):
+    def __init__(self, model, config=None):
         self.model = model
-        self.system = Config.SYSTEM_MESSAGE
-        self.max_tokens = Config.MAX_TOKENS
-        self.temp = Config.TEMP
-        # self.max_history = 100
-        self.full_message_history = []
+        self.config = config
+        self.max_tokens = self.config.MAX_TOKENS
+        self.temperature = self.config.TEMPERATURE
 
     def stream_chat(self, messages, delay_time=0.1):
         if isinstance(messages, str):
@@ -24,7 +22,7 @@ class Chat:
         try:
             response = openai.ChatCompletion.create(
                 model=self.model,
-                temperature=self.temp,
+                temperature=self.temperature,
                 max_tokens=self.max_tokens,
                 messages=messages,
                 stream=True,

@@ -11,19 +11,15 @@ from PySide6.QtWidgets import (
     QTextEdit,
     QVBoxLayout,
     QWidget,
+    QFileDialog,
 )
 
 from usdchat.views.chat_bubble import ChatBubble
 from usdchat.chat_bot import Chat
 from usdchat.chat_bridge import ChatBridge
-from usdchat.config import Config
 from usdchat.utils import chat_thread
-from usdchat.utils.conversation_manager import ConversationManager
 from usdchat.utils import process_code
 from usdchat.views.welcome_screen import init_welcome_screen
-
-logging.basicConfig(level=logging.WARNING)
-
 
 class AutoResizingTextEdit(QTextEdit):
     def __init__(self, parent=None):
@@ -63,17 +59,19 @@ class ChatBotUI(QWidget):
     signal_error_message = Signal(str)
     signal_python_execution_response = Signal(str, bool)
 
-    def __init__(self, usdviewApi, parent=None):
+    def __init__(self, config, conversation_manager=None, usdviewApi=None, parent=None, standalone=False):
         super().__init__(parent)
         self.usdviewApi = usdviewApi
-        self.setWindowTitle(Config.APP_NAME)
-        self.language_model = Config.MODEL
-        self.chat_bot = Chat(self.language_model)
-        self.chat_bridge = ChatBridge(self.chat_bot, self, self.usdviewApi)
+        self.standalone = standalone
+        self.config = config
+        self.conversation_manager = conversation_manager
+        self.setWindowTitle(self.config.APP_NAME)
+        self.language_model = self.config.MODEL
+        self.chat_bot = Chat(self.language_model, config=self.config)
+        self.chat_bridge = ChatBridge(self.chat_bot, self, usdviewApi=self.usdviewApi, conversation_manager=self.conversation_manager, standalone=self.standalone)
         self.chat_thread = chat_thread.ChatThread(
             self.chat_bot, self, "", self.usdviewApi
         )
-        self.conversation_manager = ConversationManager(new_session=True)
 
         self.init_ui()
         init_welcome_screen(self)
@@ -91,7 +89,7 @@ class ChatBotUI(QWidget):
         )
         self.setMaximumWidth(width)
         self.resize(width, height)
-        self.max_attempts = Config.MAX_ATTEMPTS
+        self.max_attempts = self.config.MAX_ATTEMPTS
         self.current_attempts = 0
 
     def connectSignals(self):
@@ -255,7 +253,7 @@ class ChatBotUI(QWidget):
             logging.error(f"Could not update message in UI due to error: {e}")
 
     def append_python_output(self, python_output, success, all_responses):
-        print(
+        logging.info(
             f"python_output: {python_output}, success: {success}, all_responses: {all_responses}"
         )
         if not python_output:

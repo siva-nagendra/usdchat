@@ -1,3 +1,4 @@
+import os
 import logging
 import threading
 
@@ -6,10 +7,11 @@ from pxr.Usdviewq.plugin import PluginContainer
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QDockWidget, QPushButton, QSizePolicy
-
+from usdchat.utils.conversation_manager import ConversationManager
+from usdchat.config.config import Config
 from usdchat.views import chat_widget
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.WARNING)
 
 
 active_chat_ui_instance = None
@@ -80,16 +82,25 @@ class CollapsibleDockWidget(QDockWidget):
             self.toggle_button.setFont(QFont("Sans-serif", 35))
             self._preferred_size = self.widget().size()
 
+def get_file_from_current_path(filename):
+    current_file_path = os.path.abspath(__file__)
+    current_dir_path = os.path.dirname(current_file_path)
+    req_path = os.path.join(current_dir_path, filename)
+    return req_path
 
 def load_chat_widget(usdviewApi=None):
     global active_chat_ui_instance
 
     if usdviewApi is None:
         usdviewApi = USDViewAPIManager.getInstance()
+    
+    config = Config()
+    config.load_from_yaml(get_file_from_current_path("usdview_chat_config.yaml"))
+    conversation_manager = ConversationManager(new_session=True, config=config)
 
     if active_chat_ui_instance is None or not active_chat_ui_instance.isVisible():
         active_chat_ui_instance = chat_widget.ChatBotUI(
-            usdviewApi, parent=usdviewApi.qMainWindow
+            config, conversation_manager=conversation_manager,usdviewApi=usdviewApi, parent=usdviewApi.qMainWindow
         )
 
         dock_widget = CollapsibleDockWidget("🤖 USDChat", usdviewApi.qMainWindow)

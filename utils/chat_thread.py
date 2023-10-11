@@ -33,8 +33,7 @@ class ChatThread(QThread):
         all_responses = self.all_responses
         self.signal_bot_full_response.emit(all_responses)
 
-        if "```python" in all_responses and "```" in all_responses:
-            self.signal_python_code_ready.emit(all_responses)
+        
 
     def stop(self):
         self.stop_flag = True
