@@ -16,7 +16,6 @@ def init_welcome_screen(self):
     welcome_text = (
         "<html><head/><body>"
         '<p align="center" style=" font-size:28pt;">USD Chat ✨</p>'
-        '<p align="center" style=" font-size:18pt;">Your AI powered chat assistant!</p>'
         "</body></html>"
     )
 
@@ -35,7 +34,7 @@ def init_welcome_screen(self):
     
     frame_layout = QVBoxLayout(button_frame)
     frame_layout.setContentsMargins(0, 0, 0, 0)
-    frame_label = QLabel("Get answers to all USD questions", button_frame)
+    frame_label = QLabel("Try it yourself", button_frame)
     frame_label.setStyleSheet("color: #AAAAAA; font-weight: bold;")
     frame_layout.addWidget(frame_label)
     

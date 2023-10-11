@@ -3,8 +3,8 @@ import yaml
 
 class Config:
     APP_NAME = "usdchat"
-    MODEL = "gpt-4"
-    # MODEL = "gpt-3.5-turbo-0613"
+    # MODEL = "gpt-4"
+    MODEL = "gpt-3.5-turbo-0613"
     OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
     MAX_TOKENS = 500
     TEMPERATURE = 0
