@@ -20,7 +20,7 @@ Imagine having a chat with GPT models that actually *get* OpenUSD and computer g
 <table>
     <tr>
         <td><img src="./resources/usdchat_standalone.png" alt="usdchat standalone"></td>
-        <td><img src="./resources/usdchat_ask.gif" alt="usdchat ask" width="1000" height="415"></td>
+        <td><img src="./resources/usdchat_ask.gif" alt="usdchat ask"></td>
     </tr>
 </table>
 
