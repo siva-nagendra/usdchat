@@ -1,8 +1,8 @@
+import importlib
 import io
 import logging
 import re
 import sys
-import importlib
 from code import InteractiveConsole as Console
 
 sub_modules = [
@@ -85,7 +85,8 @@ def process_chat_responses(messages, usdviewApi):
 
 
 def execute_python_code(code_to_run, usdviewApi):
-    logging.info("Attempting to execute Python code in usdview's Python environment.")
+    logging.info(
+        "Attempting to execute Python code in usdview's Python environment.")
 
     old_stdout, old_stderr = sys.stdout, sys.stderr
     new_stdout, new_stderr = io.StringIO(), io.StringIO()

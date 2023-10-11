@@ -6,7 +6,7 @@ Unlock the power of **Universal Scene Description (USD)** through natural langua
 
 ## 🌈 What Can It Do?
 
-✨ [Watch usdchat in Action!](https://youtu.be/Tm7_IZxPrMI) ✨
+✨ [Watch this YouTube video to see 🤖 usdchat in Action!](https://youtu.be/Tm7_IZxPrMI) ✨
 
 [![IMAGE ALT TEXT HERE](https://img.youtube.com/vi/Tm7_IZxPrMI/0.jpg)](https://www.youtube.com/watch?v=Tm7_IZxPrMI)
 

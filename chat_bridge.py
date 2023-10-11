@@ -1,5 +1,7 @@
 import logging
+
 from PySide6.QtCore import QObject, Signal
+
 from usdchat.utils.chat_thread import ChatThread
 
 
@@ -7,7 +9,14 @@ class ChatBridge(QObject):
     signal_bot_response = Signal(str)
     signal_python_code_ready = Signal(str)
 
-    def __init__(self, chat_bot, chat_widget, usdviewApi=None, conversation_manager=None, standalone=False):
+    def __init__(
+        self,
+        chat_bot,
+        chat_widget,
+        usdviewApi=None,
+        conversation_manager=None,
+        standalone=False,
+    ):
         super().__init__()
         self.chat_bot = chat_bot
         self.chat_widget = chat_widget
@@ -34,7 +43,8 @@ class ChatBridge(QObject):
 
         messages = self.get_messages()
 
-        self.conversation_manager.append_to_log({"role": "user", "content": user_input})
+        self.conversation_manager.append_to_log(
+            {"role": "user", "content": user_input})
 
         chat_thread = ChatThread(
             self.chat_bot, self.chat_widget, messages, self.usdviewApi
@@ -64,11 +74,11 @@ class ChatBridge(QObject):
 
     def on_bot_full_response(self, response):
         logging.info("on_bot_full_response", response)
-        
+
         if not self.standalone:
             if "```python" in response and "```" in response:
                 self.signal_python_code_ready.emit(response)
-            
+
         self.conversation_manager.append_to_log(
             {"role": "assistant", "content": response}
         )

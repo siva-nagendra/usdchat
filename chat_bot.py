@@ -1,9 +1,11 @@
-import time
-import openai
 import logging
+import time
+import traceback
+
+import openai
+
 from config.config import Config
 from usdchat.error_handlers.openai_error_handler import handle_openai_error
-import traceback
 
 openai.api_key = Config.OPENAI_API_KEY
 

@@ -1,13 +1,8 @@
 import random
-from PySide6.QtWidgets import (
-    QLabel,
-    QPushButton,
-    QSpacerItem,
-    QVBoxLayout,
-    QWidget,
-    QFrame,
-)
+
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (QFrame, QLabel, QPushButton, QSpacerItem,
+                               QVBoxLayout, QWidget)
 
 
 def init_welcome_screen(self):
@@ -31,13 +26,13 @@ def init_welcome_screen(self):
     selected_prompts = random.sample(example_prompts, 4)
 
     button_frame = QFrame(self.welcome_widget)
-    
+
     frame_layout = QVBoxLayout(button_frame)
     frame_layout.setContentsMargins(0, 0, 0, 0)
     frame_label = QLabel("Try it yourself", button_frame)
     frame_label.setStyleSheet("color: #AAAAAA; font-weight: bold;")
     frame_layout.addWidget(frame_label)
-    
+
     self.button1 = QPushButton(selected_prompts[0])
     self.button2 = QPushButton(selected_prompts[1])
     self.button3 = QPushButton(selected_prompts[2])
@@ -47,7 +42,7 @@ def init_welcome_screen(self):
     frame_layout.addWidget(self.button2)
     frame_layout.addWidget(self.button3)
     frame_layout.addWidget(self.button4)
-    
+
     self.vertical_spacer1 = QSpacerItem(20, 200)
     self.vertical_spacer2 = QSpacerItem(20, 200)
 

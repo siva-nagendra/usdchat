@@ -1,5 +1,7 @@
 import os
+
 import yaml
+
 
 class Config:
     APP_NAME = "usdchat"
@@ -15,10 +17,12 @@ class Config:
 
     @classmethod
     def load_from_yaml(cls, path):
-        with open(path, 'r') as file:
+        with open(path, "r") as file:
             config_data = yaml.safe_load(file)
-        
+
         for key, value in config_data.items():
             if hasattr(cls, key):
                 setattr(cls, key, value)
-        cls.SYSTEM_MESSAGE = cls.SYSTEM_MESSAGE.format(WORKING_DIRECTORY=cls.WORKING_DIRECTORY)
+        cls.SYSTEM_MESSAGE = cls.SYSTEM_MESSAGE.format(
+            WORKING_DIRECTORY=cls.WORKING_DIRECTORY
+        )

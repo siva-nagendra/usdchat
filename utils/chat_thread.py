@@ -1,4 +1,5 @@
 from PySide6.QtCore import QThread, Signal
+
 from usdchat import chat_bridge
 
 
@@ -32,8 +33,6 @@ class ChatThread(QThread):
 
         all_responses = self.all_responses
         self.signal_bot_full_response.emit(all_responses)
-
-        
 
     def stop(self):
         self.stop_flag = True

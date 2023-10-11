@@ -2,12 +2,7 @@ import logging
 
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter
-from PySide6.QtWidgets import (
-    QLabel,
-    QSizePolicy,
-    QVBoxLayout,
-    QWidget,
-)
+from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
 
 logging.basicConfig(level=logging.WARNING)
 
@@ -39,7 +34,9 @@ class ChatBubble(QWidget):
         painter = QPainter(self)
         painter.setRenderHint(QPainter.Antialiasing)
 
-        gradient = QLinearGradient(self.rect().topLeft(), self.rect().bottomLeft())
+        gradient = QLinearGradient(
+            self.rect().topLeft(),
+            self.rect().bottomLeft())
         if self.sender == "user":
             gradient.setColorAt(0, QColor("#993366"))  # Darker Pink
             gradient.setColorAt(1, QColor("#663366"))  # Darker Purple
@@ -54,7 +51,8 @@ class ChatBubble(QWidget):
                 gradient.setColorAt(0, QColor("#993333"))  # Dark Red
                 gradient.setColorAt(1, QColor("#994422"))  # Orange-ish Red
         else:
-            raise ValueError("Sender must be either 'user', 'bot', or 'python_bot'")
+            raise ValueError(
+                "Sender must be either 'user', 'bot', or 'python_bot'")
 
         painter.setBrush(QBrush(gradient))
         painter.setPen(Qt.NoPen)
@@ -103,7 +101,8 @@ class ChatBubble(QWidget):
                 f"</div>"
             )
         else:
-            raise ValueError("Sender must be either 'user', 'bot', or 'python_bot'")
+            raise ValueError(
+                "Sender must be either 'user', 'bot', or 'python_bot'")
 
         return formatted_response
 

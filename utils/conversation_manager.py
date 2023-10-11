@@ -1,6 +1,6 @@
 import json
-import os
 import logging
+import os
 from datetime import datetime
 
 
@@ -11,7 +11,7 @@ class ConversationManager:
         config=None,
     ):
         self.config = config
-        directory=f"{self.config.WORKING_DIRECTORY}/message_logs"
+        directory = f"{self.config.WORKING_DIRECTORY}/message_logs"
         self.directory = directory
         if not os.path.exists(self.directory):
             os.makedirs(self.directory)
@@ -31,20 +31,25 @@ class ConversationManager:
         self.session_log_filename = (
             f"message_history_session_{self.session_timestamp}.json"
         )
-        self.file_path = os.path.join(self.directory, self.session_log_filename)
+        self.file_path = os.path.join(
+            self.directory, self.session_log_filename)
         with open(self.file_path, "w") as f:
-            json.dump([{"role": "system", "content": self.config.SYSTEM_MESSAGE}], f)
+            json.dump(
+                [{"role": "system", "content": self.config.SYSTEM_MESSAGE}], f)
         self.conversation = self.load()
 
     def initialize_session(self):
-        existing_files = [f for f in os.listdir(self.directory) if f.endswith(".json")]
+        existing_files = [
+            f for f in os.listdir(
+                self.directory) if f.endswith(".json")]
         if existing_files:
             sorted_files = sorted(existing_files, reverse=True)
             self.session_log_filename = sorted_files[0]
         else:
             self.new_session()
 
-        self.file_path = os.path.join(self.directory, self.session_log_filename)
+        self.file_path = os.path.join(
+            self.directory, self.session_log_filename)
         self.load()
 
     def load(self):

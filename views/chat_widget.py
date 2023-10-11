@@ -2,24 +2,16 @@ import logging
 import os
 
 from PySide6.QtCore import QFile, QSize, Qt, QTextStream, QTimer, Signal
-from PySide6.QtWidgets import (
-    QApplication,
-    QHBoxLayout,
-    QPushButton,
-    QScrollArea,
-    QSizePolicy,
-    QTextEdit,
-    QVBoxLayout,
-    QWidget,
-    QFileDialog,
-)
+from PySide6.QtWidgets import (QApplication, QFileDialog, QHBoxLayout,
+                               QPushButton, QScrollArea, QSizePolicy,
+                               QTextEdit, QVBoxLayout, QWidget)
 
-from usdchat.views.chat_bubble import ChatBubble
 from usdchat.chat_bot import Chat
 from usdchat.chat_bridge import ChatBridge
-from usdchat.utils import chat_thread
-from usdchat.utils import process_code
+from usdchat.utils import chat_thread, process_code
+from usdchat.views.chat_bubble import ChatBubble
 from usdchat.views.welcome_screen import init_welcome_screen
+
 
 class AutoResizingTextEdit(QTextEdit):
     def __init__(self, parent=None):
@@ -59,7 +51,14 @@ class ChatBotUI(QWidget):
     signal_error_message = Signal(str)
     signal_python_execution_response = Signal(str, bool)
 
-    def __init__(self, config, conversation_manager=None, usdviewApi=None, parent=None, standalone=False):
+    def __init__(
+        self,
+        config,
+        conversation_manager=None,
+        usdviewApi=None,
+        parent=None,
+        standalone=False,
+    ):
         super().__init__(parent)
         self.usdviewApi = usdviewApi
         self.standalone = standalone
@@ -68,7 +67,13 @@ class ChatBotUI(QWidget):
         self.setWindowTitle(self.config.APP_NAME)
         self.language_model = self.config.MODEL
         self.chat_bot = Chat(self.language_model, config=self.config)
-        self.chat_bridge = ChatBridge(self.chat_bot, self, usdviewApi=self.usdviewApi, conversation_manager=self.conversation_manager, standalone=self.standalone)
+        self.chat_bridge = ChatBridge(
+            self.chat_bot,
+            self,
+            usdviewApi=self.usdviewApi,
+            conversation_manager=self.conversation_manager,
+            standalone=self.standalone,
+        )
         self.chat_thread = chat_thread.ChatThread(
             self.chat_bot, self, "", self.usdviewApi
         )
@@ -107,7 +112,8 @@ class ChatBotUI(QWidget):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area_widget_contents = QWidget(self.scroll_area)
         self.scroll_area.setWidget(self.scroll_area_widget_contents)
-        self.scroll_area.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        self.scroll_area.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding)
 
         self.scroll_area_layout = QVBoxLayout(self.scroll_area_widget_contents)
 
@@ -126,13 +132,15 @@ class ChatBotUI(QWidget):
         self.clear_chat_button.setObjectName("clear_chat_button")
         self.clear_chat_button.setMinimumHeight(40)
 
-        self.clear_chat_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.clear_chat_button.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.clear_chat_button.clicked.connect(self.clear_chat_ui)
 
         self.submit_button = QPushButton("⎆ Send")
         self.submit_button.setObjectName("submit_button")
         self.submit_button.setMinimumHeight(40)
-        self.submit_button.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        self.submit_button.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Fixed)
         buttons_widget = QWidget()
         buttons_layout = QHBoxLayout(buttons_widget)
         buttons_layout.addWidget(self.clear_chat_button)
@@ -212,7 +220,11 @@ class ChatBotUI(QWidget):
 
     def load_stylesheet(self):
         current_dir = os.path.dirname(os.path.abspath(__file__))
-        file_path = os.path.join(current_dir, "..", "resources", "stylesheet.qss")
+        file_path = os.path.join(
+            current_dir,
+            "..",
+            "resources",
+            "stylesheet.qss")
         file = QFile(file_path)
         if file.open(QFile.ReadOnly | QFile.Text):
             stream = QTextStream(file)
