@@ -94,6 +94,25 @@ QPushButton:hover#clear_chat_button {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
 }
 
+/* embed_stage_button Styles */
+QPushButton#embed_stage_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton:pressed#embed_stage_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #707070, stop:1 #606060);  /* Inverted Muted Grey */
+}
+
+QPushButton:hover#embed_stage_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
+}
+
+
 /* Temp Slider Styles */
 QSlider::groove:horizontal {
     border: 0px solid #151515;

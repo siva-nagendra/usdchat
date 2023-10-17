@@ -48,8 +48,9 @@ class AutoResizingTextEdit(QTextEdit):
 
 class ChatBotUI(QWidget):
     signal_user_message = Signal(str)
-    signal_error_message = Signal(str)
     signal_python_execution_response = Signal(str, bool)
+    signal_embed_stage = Signal(str)
+    signal_progress_update = Signal(int, str)
 
     def __init__(
         self,
@@ -58,6 +59,7 @@ class ChatBotUI(QWidget):
         usdviewApi=None,
         parent=None,
         standalone=False,
+        rag_mode=None,
     ):
         super().__init__(parent)
         self.usdviewApi = usdviewApi
@@ -67,15 +69,17 @@ class ChatBotUI(QWidget):
         self.setWindowTitle(self.config.APP_NAME)
         self.language_model = self.config.MODEL
         self.chat_bot = Chat(self.language_model, config=self.config)
+        self.rag_mode = rag_mode
         self.chat_bridge = ChatBridge(
             self.chat_bot,
             self,
             usdviewApi=self.usdviewApi,
             conversation_manager=self.conversation_manager,
             standalone=self.standalone,
+            rag_mode=self.rag_mode,
         )
         self.chat_thread = chat_thread.ChatThread(
-            self.chat_bot, self, "", self.usdviewApi
+            self.chat_bot, self, "", self.usdviewApi, rag_mode=self.rag_mode
         )
 
         self.init_ui()
@@ -104,6 +108,11 @@ class ChatBotUI(QWidget):
             self.run_python_code_in_main_thread
         )
         self.signal_user_message.connect(self.enable_stop_button)
+        self.signal_embed_stage.connect(self.chat_bridge.embed_stage)
+        if self.chat_bridge.embed_thread is not None:
+            self.chat_bridge.embed_thread.signal_progress_update.connect(
+                self.on_progress_update
+            )
 
     def init_ui(self):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -154,6 +163,29 @@ class ChatBotUI(QWidget):
         self.main_layout.addWidget(buttons_widget)
         self.setLayout(self.main_layout)
         self.setWindowFlags(Qt.Window)
+
+    def browse_directory(self):
+        stage_file_path, _ = QFileDialog.getOpenFileName(
+            self, "Select USD Stage")
+        if stage_file_path:
+            self.working_dir_line_edit.setText(stage_file_path)
+
+    def embed_stage(self):
+        self.embed_stage_path = self.working_dir_line_edit.text()
+        if self.embed_stage_button.text() == "⌗ Embed Stage":
+            self.embed_stage_button.setText("✋ Stop Embedding")
+            self.embed_stage_button.setStyleSheet("background-color: red;")
+            self.signal_embed_stage.emit(self.embed_stage_path)
+        else:
+            self.chat_bridge.clean_up_embed_thread()
+            self.embed_stage_button.setText("⌗ Embed Stage")
+            self.embed_stage_button.setStyleSheet("")  # Reset stylesheet
+
+    def on_progress_update(self, progress, message):
+        self.progress_label.setText(message)
+        self.progress_bar.setValue(progress)
+        self.progress_label.setVisible(True)
+        self.progress_bar.setVisible(True)
 
     def send_button_text(self, button):
         text = button.text()

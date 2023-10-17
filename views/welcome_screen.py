@@ -1,7 +1,8 @@
 import random
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QFrame, QLabel, QPushButton, QSpacerItem,
+from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QLineEdit,
+                               QProgressBar, QPushButton, QSpacerItem,
                                QVBoxLayout, QWidget)
 
 
@@ -20,6 +21,50 @@ def init_welcome_screen(self):
     self.welcome_label.adjustSize()
 
     self.welcome_layout.addWidget(self.welcome_label)
+
+    self.vertical_spacer1 = QSpacerItem(20, 150)
+    self.vertical_spacer2 = QSpacerItem(20, 150)
+    self.vertical_spacer3 = QSpacerItem(20, 150)
+
+    if self.standalone:
+        rag_frame = QFrame(self.welcome_widget)
+        rag_layout = QVBoxLayout(rag_frame)
+        rag_layout.setContentsMargins(0, 0, 0, 0)
+        rag_label = QLabel("Load stage for RAG", rag_frame)
+        rag_label.setStyleSheet("color: #AAAAAA; font-weight: bold;")
+        rag_layout.addWidget(rag_label)
+        # Working Directory LineEdit and Button
+        self.working_dir_line_edit = QLineEdit(self.config.WORKING_DIRECTORY)
+        self.working_dir_line_edit.setFixedHeight(30)
+        self.browse_button = QPushButton("📂")
+        dir_layout = QHBoxLayout()
+        dir_layout.addWidget(QLabel("Pick USD Stage"))
+        dir_layout.addWidget(self.working_dir_line_edit)
+        dir_layout.addWidget(self.browse_button)
+
+        self.browse_button.setObjectName("browse_button")
+        self.working_dir_line_edit.setObjectName("working_dir_line_edit")
+
+        self.embed_stage_button = QPushButton("⌗ Embed Stage")
+        self.embed_stage_button.setFixedHeight(30)
+        self.embed_stage_button.clicked.connect(self.embed_stage)
+        self.embed_stage_button.setObjectName("embed_stage_button")
+        self.progress_label = QLabel(
+            "", self.welcome_widget
+        )  # New label for progress text
+        self.progress_bar = QProgressBar(
+            self.welcome_widget)  # New progress bar
+        self.progress_bar.setVisible(False)  # Hide progress bar initially
+        self.progress_label.setVisible(False)  # Hide progress label initially
+
+        rag_layout.addLayout(dir_layout)
+        rag_layout.addWidget(self.embed_stage_button)
+        rag_layout.addWidget(self.progress_label)
+        rag_layout.addWidget(self.progress_bar)
+
+        self.welcome_layout.addItem(self.vertical_spacer3)
+        self.welcome_layout.addWidget(rag_frame)
+        self.browse_button.clicked.connect(self.browse_directory)
 
     example_prompts = self.config.EXAMPLE_PROMPTS
 
@@ -42,9 +87,6 @@ def init_welcome_screen(self):
     frame_layout.addWidget(self.button2)
     frame_layout.addWidget(self.button3)
     frame_layout.addWidget(self.button4)
-
-    self.vertical_spacer1 = QSpacerItem(20, 200)
-    self.vertical_spacer2 = QSpacerItem(20, 200)
 
     self.welcome_layout.addItem(self.vertical_spacer1)
     self.welcome_layout.addWidget(button_frame)
