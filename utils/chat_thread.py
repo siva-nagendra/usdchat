@@ -9,12 +9,13 @@ class ChatThread(QThread):
     signal_python_code_ready = Signal(str)
 
     def __init__(
-            self,
-            chat_bot,
-            chat_widget,
-            messages,
-            usdviewApi,
-            rag_mode=False):
+        self,
+        chat_bot,
+        chat_widget,
+        messages,
+        usdviewApi,
+        config=None,
+    ):
         super().__init__()
         self.stop_flag = False
         self.chat_bot = chat_bot
@@ -22,29 +23,22 @@ class ChatThread(QThread):
         self.messages = messages
         self.all_responses = ""
         self.usdviewApi = usdviewApi
+        self.config = config
         self.finished.connect(
             chat_bridge.ChatBridge(
-                self.chat_bot, self.chat_widget, self.usdviewApi
+                self.chat_bot,
+                self.chat_widget,
+                self.usdviewApi,
+                config=self.config,
             ).clean_up_thread
         )
-        self.rag_mode = rag_mode
 
     def run(self):
-        # response_generator = self.chat_bot.query(self.messages)
-        # print(f"Response generator: {response_generator}")
         response_generator = self.chat_bot.stream_chat(self.messages)
 
         for chunk in response_generator:
             if self.stop_flag:
                 return
-
-            if self.rag_mode and "Embeddings: " in chunk:
-                print(f"Received embeddings: {chunk}")
-
-            # Handle embedding message
-            if "Embeddings: " in chunk:
-                print(f"Received embeddings: {chunk}")
-
             self.signal_bot_response.emit(chunk)
             self.all_responses += chunk
 

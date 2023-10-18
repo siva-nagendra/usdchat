@@ -7,6 +7,7 @@ from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QLineEdit,
 
 
 def init_welcome_screen(self):
+    self.usd_dependencies = 0
     self.welcome_widget = QWidget(self.scroll_area_widget_contents)
     self.welcome_layout = QVBoxLayout(self.welcome_widget)
     welcome_text = (
@@ -33,7 +34,6 @@ def init_welcome_screen(self):
         rag_label = QLabel("Load stage for RAG", rag_frame)
         rag_label.setStyleSheet("color: #AAAAAA; font-weight: bold;")
         rag_layout.addWidget(rag_label)
-        # Working Directory LineEdit and Button
         self.working_dir_line_edit = QLineEdit(self.config.WORKING_DIRECTORY)
         self.working_dir_line_edit.setFixedHeight(30)
         self.browse_button = QPushButton("📂")
@@ -41,21 +41,16 @@ def init_welcome_screen(self):
         dir_layout.addWidget(QLabel("Pick USD Stage"))
         dir_layout.addWidget(self.working_dir_line_edit)
         dir_layout.addWidget(self.browse_button)
-
         self.browse_button.setObjectName("browse_button")
         self.working_dir_line_edit.setObjectName("working_dir_line_edit")
-
         self.embed_stage_button = QPushButton("⌗ Embed Stage")
         self.embed_stage_button.setFixedHeight(30)
         self.embed_stage_button.clicked.connect(self.embed_stage)
         self.embed_stage_button.setObjectName("embed_stage_button")
-        self.progress_label = QLabel(
-            "", self.welcome_widget
-        )  # New label for progress text
-        self.progress_bar = QProgressBar(
-            self.welcome_widget)  # New progress bar
-        self.progress_bar.setVisible(False)  # Hide progress bar initially
-        self.progress_label.setVisible(False)  # Hide progress label initially
+        self.progress_label = QLabel("", self.welcome_widget)
+        self.progress_bar = QProgressBar(self.welcome_widget)
+        self.progress_bar.setVisible(False)
+        self.progress_label.setVisible(False)
 
         rag_layout.addLayout(dir_layout)
         rag_layout.addWidget(self.embed_stage_button)

@@ -1,6 +1,7 @@
 import logging
 import os
 
+from pxr import Usd
 from PySide6.QtCore import QFile, QSize, Qt, QTextStream, QTimer, Signal
 from PySide6.QtWidgets import (QApplication, QFileDialog, QHBoxLayout,
                                QPushButton, QScrollArea, QSizePolicy,
@@ -8,7 +9,7 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QHBoxLayout,
 
 from usdchat.chat_bot import Chat
 from usdchat.chat_bridge import ChatBridge
-from usdchat.utils import chat_thread, process_code
+from usdchat.utils import chat_thread, embed_thread, process_code
 from usdchat.views.chat_bubble import ChatBubble
 from usdchat.views.welcome_screen import init_welcome_screen
 
@@ -68,25 +69,28 @@ class ChatBotUI(QWidget):
         self.conversation_manager = conversation_manager
         self.setWindowTitle(self.config.APP_NAME)
         self.language_model = self.config.MODEL
+        self.collection_name = self.config.COLLECTION_NAME
         self.chat_bot = Chat(self.language_model, config=self.config)
         self.rag_mode = rag_mode
         self.chat_bridge = ChatBridge(
             self.chat_bot,
             self,
             usdviewApi=self.usdviewApi,
+            config=self.config,
             conversation_manager=self.conversation_manager,
             standalone=self.standalone,
+            collection_name=self.collection_name,
             rag_mode=self.rag_mode,
         )
         self.chat_thread = chat_thread.ChatThread(
-            self.chat_bot, self, "", self.usdviewApi, rag_mode=self.rag_mode
+            self.chat_bot, self, "", self.usdviewApi, config=self.config
         )
 
         self.init_ui()
         init_welcome_screen(self)
         self.conversation_manager.new_session()
         self.load_stylesheet()
-        self.connectSignals()
+        self.connect_signals()
         self.activateWindow()
         self.raise_()
 
@@ -101,7 +105,7 @@ class ChatBotUI(QWidget):
         self.max_attempts = self.config.MAX_ATTEMPTS
         self.current_attempts = 0
 
-    def connectSignals(self):
+    def connect_signals(self):
         self.signal_user_message.connect(self.chat_bridge.get_bot_response)
         self.chat_bridge.signal_bot_response.connect(self.append_bot_response)
         self.chat_bridge.signal_python_code_ready.connect(
@@ -109,10 +113,10 @@ class ChatBotUI(QWidget):
         )
         self.signal_user_message.connect(self.enable_stop_button)
         self.signal_embed_stage.connect(self.chat_bridge.embed_stage)
-        if self.chat_bridge.embed_thread is not None:
-            self.chat_bridge.embed_thread.signal_progress_update.connect(
-                self.on_progress_update
-            )
+        self.chat_bridge.signal_progress_update.connect(
+            self.on_progress_update)
+        self.chat_bridge.signal_embed_complete.connect(
+            self.enable_embed_stage_button)
 
     def init_ui(self):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -170,16 +174,41 @@ class ChatBotUI(QWidget):
         if stage_file_path:
             self.working_dir_line_edit.setText(stage_file_path)
 
+    def enable_embed_stage_button(self):
+        self.embed_stage_button.setText("⌗ Embed Stage")
+        self.embed_stage_button.setProperty("stopMode", False)
+        self.embed_stage_button.setStyle(self.embed_stage_button.style())
+        self.progress_bar.setVisible(False)
+
+    def enable_stop_embed_stage_button(self):
+        self.embed_stage_button.setText("✋ Stop Embedding")
+        self.embed_stage_button.setProperty("stopMode", True)
+        self.embed_stage_button.setStyle(self.embed_stage_button.style())
+
     def embed_stage(self):
         self.embed_stage_path = self.working_dir_line_edit.text()
+        self.embed_thread = embed_thread.EmbedThread(
+            self.embed_stage_path,
+            collection_name=self.collection_name,
+            config=self.config,
+        )
+        if not self.is_valid_usd_file(self.embed_stage_path):
+            logging.error("Invalid USD file")
+            return
+
         if self.embed_stage_button.text() == "⌗ Embed Stage":
-            self.embed_stage_button.setText("✋ Stop Embedding")
-            self.embed_stage_button.setStyleSheet("background-color: red;")
             self.signal_embed_stage.emit(self.embed_stage_path)
+            self.enable_stop_embed_stage_button()
         else:
-            self.chat_bridge.clean_up_embed_thread()
-            self.embed_stage_button.setText("⌗ Embed Stage")
-            self.embed_stage_button.setStyleSheet("")  # Reset stylesheet
+            self.stop_thread(self.embed_thread)
+            self.enable_embed_stage_button()
+
+    def is_valid_usd_file(self, file_path):
+        try:
+            Usd.Stage.Open(file_path)
+            return True
+        except Exception:
+            return False
 
     def on_progress_update(self, progress, message):
         self.progress_label.setText(message)
@@ -200,8 +229,8 @@ class ChatBotUI(QWidget):
                 widget.deleteLater()
         self.welcome_layout.deleteLater()
 
-    def stop_chat_thread(self):
-        self.chat_bridge.clean_up_thread()
+    def stop_thread(self, thread):
+        self.chat_bridge.clean_up_thread(thread)
         self.enable_send_button()
 
     def enable_send_button(self):
@@ -222,10 +251,10 @@ class ChatBotUI(QWidget):
         if self.submit_button.text() == "⎆ Send":
             self.submit_input()
         else:
-            self.stop_chat_thread()
+            self.stop_thread(self.chat_thread)
 
     def clear_chat_ui(self):
-        self.stop_chat_thread()
+        self.stop_thread(self.chat_thread)
         self.scroll_area_layout.removeWidget(self.welcome_widget)
         self.conversation_layout.removeWidget(self.conversation_widget)
         self.conversation_widget.deleteLater()

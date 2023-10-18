@@ -1,24 +1,26 @@
 import logging
 
-from pxr import Usd
 from PySide6.QtCore import QObject, Signal
 
-from usdchat.utils.chat_thread import ChatThread
-from usdchat.utils.embed_thread import EmbedThread
+from usdchat.services.chromadb_collections import ChromaDBCollections
+from usdchat.utils import chat_thread, embed_thread
 
 
 class ChatBridge(QObject):
     signal_bot_response = Signal(str)
     signal_python_code_ready = Signal(str)
     signal_progress_update = Signal(int, str)
+    signal_embed_complete = Signal(int)
 
     def __init__(
         self,
         chat_bot,
         chat_widget,
         usdviewApi=None,
+        config=None,
         conversation_manager=None,
         standalone=False,
+        collection_name="",
         rag_mode=None,
     ):
         super().__init__()
@@ -26,10 +28,13 @@ class ChatBridge(QObject):
         self.chat_widget = chat_widget
         self.standalone = standalone
         self.usdviewApi = usdviewApi
+        self.config = config
         self.rag_mode = rag_mode
-        self.chat_threads = []
-        self.embed_thread = EmbedThread("/tmp")
+        self.chat_thread_instance = chat_thread
+        self.embed_thread_instance = embed_thread
         self.conversation_manager = conversation_manager
+        self.chromadb_collections = ChromaDBCollections(config=self.config)
+        self.collection_name = collection_name
 
     @property
     def conversation_manager(self):
@@ -48,23 +53,25 @@ class ChatBridge(QObject):
             self.conversation_manager.new_session()
 
         messages = self.get_messages()
-
         self.conversation_manager.append_to_log(
             {"role": "user", "content": user_input})
 
-        chat_thread = ChatThread(
+        if self.rag_mode:
+            messages = self.get_query_messages(user_input, messages)
+
+        self.chat_thread = self.chat_thread_instance.ChatThread(
             self.chat_bot,
             self.chat_widget,
             messages,
             self.usdviewApi,
-            rag_mode=self.rag_mode,
+            config=self.config,
         )
 
-        self.chat_threads.append(chat_thread)
-        chat_thread.start()
+        self.chat_thread.start()
 
-        chat_thread.signal_bot_response.connect(self.signal_bot_response)
-        chat_thread.signal_bot_full_response.connect(self.on_bot_full_response)
+        self.chat_thread.signal_bot_response.connect(self.signal_bot_response)
+        self.chat_thread.signal_bot_full_response.connect(
+            self.on_bot_full_response)
 
         self.chat_widget.signal_python_execution_response.connect(
             self.on_python_execution_response
@@ -73,6 +80,34 @@ class ChatBridge(QObject):
     def get_messages(self):
         messages = self.conversation_manager.load()
         return messages
+
+    def get_query_messages(self, user_input, messages):
+        self.query_text = user_input
+        self.context = self.query_agent(self.query_text)
+
+        prompt = [
+            {
+                "role": "system",
+                "content": self.config.RAG_PROMPT,
+            },
+            {"role": "user", "content": f"{self.query_text} {self.context}"},
+        ]
+        messages.extend(prompt)
+
+        return messages
+
+    def query_agent(self, query_text, n_results=10):
+        query_results = self.chromadb_collections.query_collection(
+            collection_name=self.collection_name,
+            query_texts=[query_text],
+            n_results=n_results,
+            include=["documents"],
+        )
+        flat_list = [item for sublist in query_results["documents"]
+                     for item in sublist]
+        context = " ".join(flat_list)
+        logging.info(f"Context: {context}")
+        return context
 
     def on_python_execution_response(self, python_output, success):
         self.conversation_manager.append_to_log(
@@ -83,7 +118,7 @@ class ChatBridge(QObject):
         )
 
     def on_bot_full_response(self, response):
-        logging.info("on_bot_full_response", response)
+        logging.info("on_bot_full_response: %s", response)
 
         if not self.standalone:
             if "```python" in response and "```" in response:
@@ -94,48 +129,24 @@ class ChatBridge(QObject):
         )
         self.chat_widget.enable_send_button()
 
-    def clean_up_thread(self):
-        if self.chat_threads:
-            last_thread = self.chat_threads[-1]
-            last_thread.stop()
-            last_thread.quit()
-            last_thread.wait()
-            self.chat_threads.remove(last_thread)
-
-    def is_valid_usd_file(self, file_path):
-        try:
-            Usd.Stage.Open(file_path)
-            return True
-        except Exception:
-            return False
-
     def embed_stage(self, stage_path):
-        # Check if its a valid stage path
-        if not self.is_valid_usd_file(stage_path):
-            logging.error(f"Invalid stage path: {stage_path}")
-            return
-        # Clean up previous embed_thread before creating a new one
-        self.clean_up_embed_thread()
-        self.embed_thread = EmbedThread(stage_path)
-        self.embed_thread.signal_progress_update.connect(
-            self.chat_widget.on_progress_update
-        )  # Connection here
-        self.embed_thread.finished.connect(self.clean_up_embed_thread)
+        self.embed_thread = self.embed_thread_instance.EmbedThread(
+            stage_path, collection_name=self.collection_name, config=self.config)
         self.embed_thread.start()
 
-    def on_embed_complete(self, final_paths):
-        logging.info(f"Embedding complete. {len(final_paths)} files embedded.")
+        self.embed_thread.signal_progress_update.connect(
+            self.signal_progress_update)
         self.embed_thread.signal_embed_complete.connect(self.on_embed_complete)
-        self.conversation_manager.append_to_log(
-            {
-                "role": "assistant",
-                "content": f"Embedding complete. {len(final_paths)} files embedded.",
-            }
-        )
 
-    def clean_up_embed_thread(self):
-        if self.embed_thread:
-            self.embed_thread.stop()  # Ensure the thread is stopped
-            self.embed_thread.quit()
-            self.embed_thread.wait()
-            self.embed_thread = None  # De-reference the thread object
+    def on_embed_complete(self, no_of_chunks):
+        logging.info(f"Embedding complete. {no_of_chunks} files embedded.")
+        self.clean_up_thread(self.embed_thread)
+        self.signal_embed_complete.emit(no_of_chunks)
+
+    def clean_up_thread(self, thread):
+        if thread:
+            thread.stop()
+            thread.quit()
+            thread.wait()
+        else:
+            logging.error("Thread is None")

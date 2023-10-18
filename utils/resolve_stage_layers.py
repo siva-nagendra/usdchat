@@ -38,7 +38,12 @@ def convert_to_ascii(layer_path, tmp_dir, conversion_dict):
             f"{layer_path} is already in ASCII format or couldn't be opened.")
 
 
-def resolve_stage(filepath, progress_signal, progress_range=(0, 40)):
+def resolve_all_layers(
+    filepath,
+    signal_progress_update,
+    progress_range=(
+        0,
+        20)):
     """Main function to collect and print all unique layer paths from a USD stage."""
     stage = Usd.Stage.Open(filepath)
     all_layer_paths = collect_all_layer_paths(stage)
@@ -53,6 +58,7 @@ def resolve_stage(filepath, progress_signal, progress_range=(0, 40)):
     for layer_path in all_layer_paths:
         logging.info(layer_path)
         convert_to_ascii(layer_path, tmp_dir, conversion_dict)
+
         # Update progress
         processed_layers += 1
         progress_percentage = int(
@@ -62,9 +68,10 @@ def resolve_stage(filepath, progress_signal, progress_range=(0, 40)):
                 * (progress_range[1] - progress_range[0])
             )
         )
-        progress_signal.emit(
+        signal_progress_update.emit(
             progress_percentage,
-            f"Processed {processed_layers}/{total_layers} layers")
+            f"Resolving Stage: {processed_layers}/{total_layers} layers ({progress_percentage}%)",
+        )
 
     final_paths = [conversion_dict.get(path, path) for path in all_layer_paths]
 
