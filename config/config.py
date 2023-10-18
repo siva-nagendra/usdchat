@@ -25,7 +25,6 @@ class Config:
                 answer the question. The context given is from the ChromaDB database, \
                 which contains pre-embedded USD texts. Do not contradict the contents of the given text in your answer."
     EXAMPLE_PROMPTS = []
-    COLLECTION_NAME = "alab"
 
     @classmethod
     def load_from_yaml(cls, path):

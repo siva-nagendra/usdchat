@@ -40,8 +40,9 @@ class ChatBridge(QObject):
         self.embed_thread_instance = embed_thread
         self.embed_threads = []
         self.conversation_manager = conversation_manager
-        self.chromadb_collections = ChromaDBCollections(config=self.config)
         self.collection_name = collection_name
+        print(f"collection_name: {collection_name}")
+        self.chromadb_collections = ChromaDBCollections(config=self.config)
 
     @property
     def conversation_manager(self):

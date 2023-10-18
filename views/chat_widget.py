@@ -74,7 +74,7 @@ class ChatBotUI(QWidget):
         self.conversation_manager = conversation_manager
         self.setWindowTitle(self.config.APP_NAME)
         self.language_model = self.config.MODEL
-        self.collection_name = self.config.COLLECTION_NAME
+        self.collection_name = "usdchat"
         self.chat_bot = Chat(self.language_model, config=self.config)
         self.rag_mode = True
         self.chat_bridge = ChatBridge(
@@ -182,7 +182,7 @@ class ChatBotUI(QWidget):
             self.working_dir_line_edit.setText(stage_file_path)
 
     def enable_embed_stage_button(self):
-        self.embed_stage_button.setText("⌗ Embed Stage")
+        self.embed_stage_button.setText("💿 Create Collection")
         self.embed_stage_button.setProperty("stopMode", False)
         self.embed_stage_button.setStyle(self.embed_stage_button.style())
         self.progress_bar.setVisible(False)
@@ -192,18 +192,34 @@ class ChatBotUI(QWidget):
         self.embed_stage_button.setProperty("stopMode", True)
         self.embed_stage_button.setStyle(self.embed_stage_button.style())
 
+    def check_if_embed_ready(self):
+        self.embed_stage_path = self.working_dir_line_edit.text()
+        if not self.is_valid_usd_file(self.embed_stage_path):
+            self.embed_stage_button.setDisabled(True)
+            self.collection_name_label.setVisible(True)
+            self.collection_name_label.setText("Invalid USD File")
+            return
+
+        self.collection_name = os.path.splitext(
+            os.path.basename(self.embed_stage_path)
+        )[0]
+        self.chat_bridge.collection_name = self.collection_name
+
+        self.collection_name_label.setVisible(True)
+        self.collection_name_label.setText(
+            f"Collection: {self.collection_name}")
+        self.embed_stage_button.setDisabled(False)
+
     def embed_stage(self):
         self.embed_stage_path = self.working_dir_line_edit.text()
+
         self.embed_thread = embed_thread.EmbedThread(
             self.embed_stage_path,
             collection_name=self.collection_name,
             config=self.config,
         )
-        if not self.is_valid_usd_file(self.embed_stage_path):
-            logger.error("Invalid USD file")
-            return
 
-        if self.embed_stage_button.text() == "⌗ Embed Stage":
+        if self.embed_stage_button.text() == "💿 Create Collection":
             self.signal_embed_stage.emit(self.embed_stage_path)
             self.enable_stop_embed_stage_button()
         else:

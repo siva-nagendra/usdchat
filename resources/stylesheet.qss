@@ -112,6 +112,11 @@ QPushButton:hover#embed_stage_button {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
 }
 
+QPushButton:disabled#embed_stage_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #404040, stop:1 #454545);  /* Darker muted Grey */
+    color: #a0a0a0;  /* Duller text color */
+}
+
 /* embed_stage_button when "Stop" */
 QPushButton#embed_stage_button[stopMode="true"] {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #993333, stop:1 #994422);  /* Red to Orange-ish */
@@ -172,6 +177,13 @@ QLineEdit#working_dir_line_edit {
     border-radius: 10px;
 }
 
+/* collection_name_line_edit Styles */
+QLineEdit#collection_name_line_edit {
+    background-color: #1C1C1C;
+    color: #bdbdbd;  /* More Yellowish-Green Text */
+    padding: 3px;
+    border-radius: 10px;
+}
 
 /* Welcome Screen Buttons */
 QPushButton {

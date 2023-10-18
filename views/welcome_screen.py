@@ -1,9 +1,9 @@
 import random
 
 from PySide6.QtCore import Qt
-from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QLineEdit,
-                               QProgressBar, QPushButton, QSpacerItem,
-                               QVBoxLayout, QWidget)
+from PySide6.QtWidgets import (QComboBox, QFrame, QHBoxLayout, QLabel,
+                               QLineEdit, QProgressBar, QPushButton,
+                               QSizePolicy, QSpacerItem, QVBoxLayout, QWidget)
 
 from usdchat.views.mode_switcher import ModeSwitcher
 
@@ -34,39 +34,86 @@ def init_welcome_screen(self):
     self.welcome_layout.addWidget(self.mode_switcher)
     if self.rag_mode:
         self.mode_switcher.button_rag.setChecked(True)
+
         rag_frame = QFrame(self.welcome_widget)
         rag_frame.setObjectName("rag_frame")
+
         rag_layout = QVBoxLayout(rag_frame)
         rag_layout.setContentsMargins(0, 0, 0, 0)
+
         rag_label = QLabel("Load stage for RAG", rag_frame)
         rag_label.setStyleSheet("color: #AAAAAA; font-weight: bold;")
+
         rag_layout.addWidget(rag_label)
-        self.working_dir_line_edit = QLineEdit(self.config.WORKING_DIRECTORY)
+
+        self.working_dir_line_edit = QLineEdit()
+        self.working_dir_line_edit.setPlaceholderText("Pick a valid USD File")
         self.working_dir_line_edit.setFixedHeight(30)
+        self.working_dir_line_edit.setObjectName("working_dir_line_edit")
+
         self.browse_button = QPushButton("📂")
+        self.browse_button.setObjectName("browse_button")
+
         dir_layout = QHBoxLayout()
-        dir_layout.addWidget(QLabel("Pick USD Stage"))
+        dir_layout.addWidget(QLabel("USD Stage"))
         dir_layout.addWidget(self.working_dir_line_edit)
         dir_layout.addWidget(self.browse_button)
-        self.browse_button.setObjectName("browse_button")
-        self.working_dir_line_edit.setObjectName("working_dir_line_edit")
-        self.embed_stage_button = QPushButton("⌗ Embed Stage")
+
+        self.collection_name_label = QLabel("")
+        self.collection_name_label.setVisible(False)
+
+        self.embed_stage_button = QPushButton("💿 Create Collection")
         self.embed_stage_button.setFixedHeight(30)
-        self.embed_stage_button.clicked.connect(self.embed_stage)
         self.embed_stage_button.setObjectName("embed_stage_button")
+        self.embed_stage_button.setSizePolicy(
+            QSizePolicy.Expanding, QSizePolicy.Expanding
+        )
+        self.embed_stage_button.setDisabled(True)
+
+        create_collection_layout = QHBoxLayout()
+        create_collection_layout.addWidget(self.collection_name_label)
+        create_collection_layout.addWidget(self.embed_stage_button)
+
         self.progress_label = QLabel("", self.welcome_widget)
-        self.progress_bar = QProgressBar(self.welcome_widget)
-        self.progress_bar.setVisible(False)
         self.progress_label.setVisible(False)
 
+        self.progress_bar = QProgressBar(self.welcome_widget)
+        self.progress_bar.setVisible(False)
+
+        # Create combo box
+        self.collection_combo_box = QComboBox(rag_frame)
+        self.collection_combo_box.setObjectName("collection_combo_box")
+        self.collection_combo_box_label = QLabel(
+            "Choose Collection to chat with", rag_frame
+        )
+        self.collection_combo_box_label.setStyleSheet(
+            "color: #AAAAAA; font-weight: bold;"
+        )
+
+        self.collection_combo_box.addItems(
+            self.chat_bridge.chromadb_collections.all_collections()
+        )
+
+        all_collection_layout = QHBoxLayout()
+        all_collection_layout.addWidget(self.collection_combo_box_label)
+        all_collection_layout.addWidget(self.collection_combo_box)
+
         rag_layout.addLayout(dir_layout)
-        rag_layout.addWidget(self.embed_stage_button)
+        rag_layout.addLayout(create_collection_layout)
+
         rag_layout.addWidget(self.progress_label)
         rag_layout.addWidget(self.progress_bar)
+        rag_layout.addLayout(all_collection_layout)
+        rag_layout.setContentsMargins(0, 0, 0, 0)
 
         self.welcome_layout.addItem(self.vertical_spacer3)
         self.welcome_layout.addWidget(rag_frame)
+
         self.browse_button.clicked.connect(self.browse_directory)
+        self.working_dir_line_edit.textChanged.connect(
+            self.check_if_embed_ready)
+        self.embed_stage_button.clicked.connect(self.embed_stage)
+
     else:
         self.vertical_spacer3 = QSpacerItem(20, 220)
         self.welcome_layout.addItem(self.vertical_spacer3)

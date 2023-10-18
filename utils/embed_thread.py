@@ -20,6 +20,7 @@ class EmbedThread(QThread):
         self.stop_flag = False
         self.stage_path = stage_path
         self.collection_name = collection_name
+        print(f"collection_name: {collection_name}")
         self.config = config
         self.chromadb_collections = ChromaDBCollections(config=self.config)
 
@@ -30,7 +31,8 @@ class EmbedThread(QThread):
             self.signal_progress_update.emit(0, "😭 Embedding cancelled.")
             return
 
-        self.chromadb_collections.reset_chromadb()
+        # self.chromadb_collections.reset_chromadb()
+
         if self.stop_flag:
             self.signal_progress_update.emit(0, "😭 Embedding cancelled.")
             return
