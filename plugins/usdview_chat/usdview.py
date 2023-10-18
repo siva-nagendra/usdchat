@@ -12,8 +12,10 @@ from usdchat.config.config import Config
 from usdchat.utils.conversation_manager import ConversationManager
 from usdchat.views import chat_widget
 
-logging.basicConfig(level=logging.WARNING)
-
+logging.basicConfig(
+    level=logging.WARNING,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 active_chat_ui_instance = None
 
@@ -103,6 +105,7 @@ def load_chat_widget(usdviewApi=None):
     conversation_manager = ConversationManager(new_session=True, config=config)
 
     if active_chat_ui_instance is None or not active_chat_ui_instance.isVisible():
+        logger.info("Loading chat widget")
         active_chat_ui_instance = chat_widget.ChatBotUI(
             config,
             conversation_manager=conversation_manager,

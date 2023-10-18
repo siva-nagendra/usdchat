@@ -5,6 +5,11 @@ import re
 import sys
 from code import InteractiveConsole as Console
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
 sub_modules = [
     "Tf",
     "Gf",
@@ -46,14 +51,14 @@ sub_modules = [
 
 
 def extract_python_code(text):
-    logging.info("Extracting Python code blocks from the text.")
+    logger.info("Extracting Python code blocks from the text.")
     python_code_blocks = re.findall(r"```python\n(.*?)```", text, re.DOTALL)
-    logging.info(f"Extracted Python code blocks: {python_code_blocks}")
+    logger.info(f"Extracted Python code blocks: {python_code_blocks}")
     return python_code_blocks
 
 
 def process_chat_responses(messages, usdviewApi):
-    logging.info("Processing chat responses.")
+    logger.info("Processing chat responses.")
 
     if not isinstance(messages, list):
         messages = [messages]
@@ -62,17 +67,17 @@ def process_chat_responses(messages, usdviewApi):
     all_code_blocks = []
 
     for message in messages:
-        logging.info(f"Processing message: {message}")
+        logger.info(f"Processing message: {message}")
         accumulated_text += message
 
     python_code_snippets = extract_python_code(accumulated_text)
     if python_code_snippets:
         all_code_blocks.extend(python_code_snippets)
         final_code = "\n".join(all_code_blocks)
-        logging.info(f"Final code to be executed: {final_code}")
+        logger.info(f"Final code to be executed: {final_code}")
         code_to_run = f'''exec("""\n{final_code}\n""")'''
 
-        logging.info(f"Processed code: {code_to_run}")
+        logger.info(f"Processed code: {code_to_run}")
 
         output, success = execute_python_code(final_code, usdviewApi)
 
@@ -85,7 +90,7 @@ def process_chat_responses(messages, usdviewApi):
 
 
 def execute_python_code(code_to_run, usdviewApi):
-    logging.info(
+    logger.info(
         "Attempting to execute Python code in usdview's Python environment.")
 
     old_stdout, old_stderr = sys.stdout, sys.stderr
@@ -101,9 +106,9 @@ def execute_python_code(code_to_run, usdviewApi):
             module = importlib.import_module(f"pxr.{sub_module}")
             python_console.locals[sub_module] = module
         except ImportError:
-            logging.warning(f"Failed to import {sub_module}")
+            logger.warning(f"Failed to import {sub_module}")
 
-    logging.info(f"Code being passed to interpreter: {code_to_run}")
+    logger.info(f"Code being passed to interpreter: {code_to_run}")
 
     python_console.runcode(code_to_run)
 
@@ -116,8 +121,8 @@ def execute_python_code(code_to_run, usdviewApi):
     new_stderr.close()
 
     if stderr_content:
-        logging.error(f"Error in code execution: {stderr_content}")
+        logger.error(f"Error in code execution: {stderr_content}")
         return f"Error: {stderr_content}", False
     else:
-        logging.info("Code executed successfully.")
+        logger.info("Code executed successfully.")
         return stdout_content, True

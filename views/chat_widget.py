@@ -5,13 +5,19 @@ from pxr import Usd
 from PySide6.QtCore import QFile, QSize, Qt, QTextStream, QTimer, Signal
 from PySide6.QtWidgets import (QApplication, QFileDialog, QHBoxLayout,
                                QPushButton, QScrollArea, QSizePolicy,
-                               QTextEdit, QVBoxLayout, QWidget)
+                               QSpacerItem, QTextEdit, QVBoxLayout, QWidget)
 
 from usdchat.chat_bot import Chat
 from usdchat.chat_bridge import ChatBridge
 from usdchat.utils import chat_thread, embed_thread, process_code
 from usdchat.views.chat_bubble import ChatBubble
 from usdchat.views.welcome_screen import init_welcome_screen
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+
+logger = logging.getLogger(__name__)
 
 
 class AutoResizingTextEdit(QTextEdit):
@@ -60,7 +66,6 @@ class ChatBotUI(QWidget):
         usdviewApi=None,
         parent=None,
         standalone=False,
-        rag_mode=None,
     ):
         super().__init__(parent)
         self.usdviewApi = usdviewApi
@@ -71,7 +76,7 @@ class ChatBotUI(QWidget):
         self.language_model = self.config.MODEL
         self.collection_name = self.config.COLLECTION_NAME
         self.chat_bot = Chat(self.language_model, config=self.config)
-        self.rag_mode = rag_mode
+        self.rag_mode = True
         self.chat_bridge = ChatBridge(
             self.chat_bot,
             self,
@@ -87,7 +92,7 @@ class ChatBotUI(QWidget):
         )
 
         self.init_ui()
-        init_welcome_screen(self)
+        self.init_welcome_screen = init_welcome_screen(self)
         self.conversation_manager.new_session()
         self.load_stylesheet()
         self.connect_signals()
@@ -117,6 +122,8 @@ class ChatBotUI(QWidget):
             self.on_progress_update)
         self.chat_bridge.signal_embed_complete.connect(
             self.enable_embed_stage_button)
+        self.mode_switcher.signalRagModeChanged.connect(
+            self.handleRagModeChange)
 
     def init_ui(self):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -193,15 +200,23 @@ class ChatBotUI(QWidget):
             config=self.config,
         )
         if not self.is_valid_usd_file(self.embed_stage_path):
-            logging.error("Invalid USD file")
+            logger.error("Invalid USD file")
             return
 
         if self.embed_stage_button.text() == "⌗ Embed Stage":
             self.signal_embed_stage.emit(self.embed_stage_path)
             self.enable_stop_embed_stage_button()
         else:
-            self.stop_thread(self.embed_thread)
+            self.chat_bridge.clean_up_thread()
             self.enable_embed_stage_button()
+
+    def handleRagModeChange(self, newRagMode):
+        self.rag_mode = newRagMode
+        logger.info(f"rag_mode: {self.rag_mode}")
+        self.chat_bridge.rag_mode = self.rag_mode
+        self.hide_welcome_screen()
+        self.scroll_area_layout.removeWidget(self.welcome_widget)
+        init_welcome_screen(self)
 
     def is_valid_usd_file(self, file_path):
         try:
@@ -229,10 +244,6 @@ class ChatBotUI(QWidget):
                 widget.deleteLater()
         self.welcome_layout.deleteLater()
 
-    def stop_thread(self, thread):
-        self.chat_bridge.clean_up_thread(thread)
-        self.enable_send_button()
-
     def enable_send_button(self):
         self.submit_button.setText("⎆ Send")
         self.submit_button.setProperty("stopMode", False)
@@ -251,10 +262,11 @@ class ChatBotUI(QWidget):
         if self.submit_button.text() == "⎆ Send":
             self.submit_input()
         else:
-            self.stop_thread(self.chat_thread)
+            self.chat_bridge.clean_up_thread()
+            self.enable_send_button()
 
     def clear_chat_ui(self):
-        self.stop_thread(self.chat_thread)
+        self.chat_bridge.clean_up_thread()
         self.scroll_area_layout.removeWidget(self.welcome_widget)
         self.conversation_layout.removeWidget(self.conversation_widget)
         self.conversation_widget.deleteLater()
@@ -292,14 +304,14 @@ class ChatBotUI(QWidget):
             stylesheet = stream.readAll()
             self.setStyleSheet(stylesheet)
         else:
-            logging.error(f"Failed to open {file_path}")
+            logger.error(f"Failed to open {file_path}")
 
     def submit_input(self):
         try:
             user_input = self.user_input.toPlainText().strip()
 
             if not user_input:
-                logging.warning("User input is empty. No action taken.")
+                logger.warning("User input is empty. No action taken.")
                 return
             self.welcome_widget.setVisible(False)
             self.append_message(user_input, "user")
@@ -316,17 +328,17 @@ class ChatBotUI(QWidget):
             self.signal_user_message.emit(user_input)
 
         except Exception as e:
-            logging.error(f"An error occurred: {e}")
+            logger.error(f"An error occurred: {e}")
 
     def append_bot_response(self, bot_response):
         try:
             self.temp_bot_message.update_text(bot_response)
             self.scroll_to_end()
         except AttributeError as e:
-            logging.error(f"Could not update message in UI due to error: {e}")
+            logger.error(f"Could not update message in UI due to error: {e}")
 
     def append_python_output(self, python_output, success, all_responses):
-        logging.info(
+        logger.info(
             f"python_output: {python_output}, success: {success}, all_responses: {all_responses}"
         )
         if not python_output:

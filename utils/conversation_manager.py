@@ -3,6 +3,11 @@ import logging
 import os
 from datetime import datetime
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
 
 class ConversationManager:
     def __init__(
@@ -64,7 +69,7 @@ class ConversationManager:
                     else:
                         self.conversation = json.loads(file_content)
             except (UnicodeDecodeError, json.JSONDecodeError):
-                logging.error(
+                logger.error(
                     "Error decoding the file. Starting with an empty conversation list."
                 )
                 self.conversation = []
@@ -77,7 +82,7 @@ class ConversationManager:
             json.dump(self.conversation, f, indent=2)
 
     def append_to_log(self, message):
-        logging.info(f"Appending message: {message}")
+        logger.info(f"Appending message: {message}")
         if not self.conversation or self.conversation[-1] != message:
             self.conversation.append(message)
             self.save()

@@ -5,6 +5,11 @@ from PySide6.QtCore import QObject, Signal
 from usdchat.services.chromadb_collections import ChromaDBCollections
 from usdchat.utils import chat_thread, embed_thread
 
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
 
 class ChatBridge(QObject):
     signal_bot_response = Signal(str)
@@ -31,7 +36,9 @@ class ChatBridge(QObject):
         self.config = config
         self.rag_mode = rag_mode
         self.chat_thread_instance = chat_thread
+        self.chat_threads = []
         self.embed_thread_instance = embed_thread
+        self.embed_threads = []
         self.conversation_manager = conversation_manager
         self.chromadb_collections = ChromaDBCollections(config=self.config)
         self.collection_name = collection_name
@@ -66,7 +73,7 @@ class ChatBridge(QObject):
             self.usdviewApi,
             config=self.config,
         )
-
+        self.chat_threads.append(self.chat_thread)
         self.chat_thread.start()
 
         self.chat_thread.signal_bot_response.connect(self.signal_bot_response)
@@ -96,7 +103,7 @@ class ChatBridge(QObject):
 
         return messages
 
-    def query_agent(self, query_text, n_results=10):
+    def query_agent(self, query_text, n_results=5):
         query_results = self.chromadb_collections.query_collection(
             collection_name=self.collection_name,
             query_texts=[query_text],
@@ -106,7 +113,7 @@ class ChatBridge(QObject):
         flat_list = [item for sublist in query_results["documents"]
                      for item in sublist]
         context = " ".join(flat_list)
-        logging.info(f"Context: {context}")
+        logger.info(f"Context: {context}")
         return context
 
     def on_python_execution_response(self, python_output, success):
@@ -118,7 +125,7 @@ class ChatBridge(QObject):
         )
 
     def on_bot_full_response(self, response):
-        logging.info("on_bot_full_response: %s", response)
+        logger.info("on_bot_full_response: %s", response)
 
         if not self.standalone:
             if "```python" in response and "```" in response:
@@ -132,6 +139,7 @@ class ChatBridge(QObject):
     def embed_stage(self, stage_path):
         self.embed_thread = self.embed_thread_instance.EmbedThread(
             stage_path, collection_name=self.collection_name, config=self.config)
+        self.embed_threads.append(self.embed_thread)
         self.embed_thread.start()
 
         self.embed_thread.signal_progress_update.connect(
@@ -139,14 +147,21 @@ class ChatBridge(QObject):
         self.embed_thread.signal_embed_complete.connect(self.on_embed_complete)
 
     def on_embed_complete(self, no_of_chunks):
-        logging.info(f"Embedding complete. {no_of_chunks} files embedded.")
-        self.clean_up_thread(self.embed_thread)
+        logger.info(f"Embedding complete. {no_of_chunks} files embedded.")
+        self.clean_up_thread()
         self.signal_embed_complete.emit(no_of_chunks)
 
-    def clean_up_thread(self, thread):
-        if thread:
-            thread.stop()
-            thread.quit()
-            thread.wait()
-        else:
-            logging.error("Thread is None")
+    def clean_up_thread(self):
+        if self.chat_threads:
+            last_thread = self.chat_threads[-1]
+            last_thread.stop()
+            last_thread.quit()
+            last_thread.wait()
+            self.chat_threads.remove(last_thread)
+
+        if self.embed_threads:
+            last_thread = self.embed_threads[-1]
+            last_thread.stop()
+            last_thread.quit()
+            last_thread.wait()
+            self.embed_threads.remove(last_thread)

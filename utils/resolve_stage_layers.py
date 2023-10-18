@@ -5,7 +5,10 @@ import tempfile
 
 from pxr import Sdf, Usd
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def collect_layer_paths_from_prim(prim):
@@ -30,11 +33,11 @@ def convert_to_ascii(layer_path, tmp_dir, conversion_dict):
 
     layer = Sdf.Layer.FindOrOpen(layer_path)
     if layer and not layer_path.endswith(".usda"):
-        logging.info(f"Converting {layer_path} to ASCII...")
+        logger.info(f"Converting {layer_path} to ASCII...")
         subprocess.run(["usdcat", "-o", output_path, layer_path])
         conversion_dict[layer_path] = output_path
     else:
-        logging.info(
+        logger.info(
             f"{layer_path} is already in ASCII format or couldn't be opened.")
 
 
@@ -49,14 +52,14 @@ def resolve_all_layers(
     all_layer_paths = collect_all_layer_paths(stage)
 
     tmp_dir = tempfile.mkdtemp(prefix="usd_ascii_")
-    logging.info(f"Temporary directory created: {tmp_dir}")
+    logger.info(f"Temporary directory created: {tmp_dir}")
 
     conversion_dict = {}
     total_layers = len(all_layer_paths)
-    logging.info(f"All collected layers ({total_layers}):")
+    logger.info(f"All collected layers ({total_layers}):")
     processed_layers = 0
     for layer_path in all_layer_paths:
-        logging.info(layer_path)
+        logger.info(layer_path)
         convert_to_ascii(layer_path, tmp_dir, conversion_dict)
 
         # Update progress
@@ -75,8 +78,8 @@ def resolve_all_layers(
 
     final_paths = [conversion_dict.get(path, path) for path in all_layer_paths]
 
-    logging.info(f"\nFinal paths ({len(final_paths)}):")
+    logger.info(f"\nFinal paths ({len(final_paths)}):")
     for path in final_paths:
-        logging.info(path)
+        logger.info(path)
 
     return final_paths

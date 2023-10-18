@@ -26,7 +26,6 @@ def main():
         config=config,
         conversation_manager=conversation_manager,
         standalone=True,
-        rag_mode=True,
     )
     chat_ui.show()
     sys.exit(app.exec())

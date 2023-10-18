@@ -5,16 +5,18 @@ from PySide6.QtWidgets import (QFrame, QHBoxLayout, QLabel, QLineEdit,
                                QProgressBar, QPushButton, QSpacerItem,
                                QVBoxLayout, QWidget)
 
+from usdchat.views.mode_switcher import ModeSwitcher
+
 
 def init_welcome_screen(self):
-    self.usd_dependencies = 0
+    self.mode_switcher = ModeSwitcher(rag_mode=self.rag_mode)
+    self.mode_switcher.signalRagModeChanged.connect(self.handleRagModeChange)
     self.welcome_widget = QWidget(self.scroll_area_widget_contents)
     self.welcome_layout = QVBoxLayout(self.welcome_widget)
     welcome_text = (
         "<html><head/><body>"
-        '<p align="center" style=" font-size:28pt;">USD Chat ✨</p>'
-        "</body></html>"
-    )
+        '<p align="center" style=" font-size:28pt; font-weight: bold;">USD Chat ✨</p>'
+        "</body></html>")
 
     self.welcome_label = QLabel(welcome_text, self.scroll_area_widget_contents)
     self.welcome_label.setAlignment(Qt.AlignTop | Qt.AlignCenter)
@@ -23,12 +25,17 @@ def init_welcome_screen(self):
 
     self.welcome_layout.addWidget(self.welcome_label)
 
-    self.vertical_spacer1 = QSpacerItem(20, 150)
-    self.vertical_spacer2 = QSpacerItem(20, 150)
-    self.vertical_spacer3 = QSpacerItem(20, 150)
+    self.vertical_spacer1 = QSpacerItem(20, 200)
+    self.vertical_spacer2 = QSpacerItem(20, 80)
+    self.vertical_spacer3 = QSpacerItem(20, 100)
+    self.vertical_spacer4 = QSpacerItem(20, 50)
 
-    if self.standalone:
+    self.welcome_layout.addItem(self.vertical_spacer4)
+    self.welcome_layout.addWidget(self.mode_switcher)
+    if self.rag_mode:
+        self.mode_switcher.button_rag.setChecked(True)
         rag_frame = QFrame(self.welcome_widget)
+        rag_frame.setObjectName("rag_frame")
         rag_layout = QVBoxLayout(rag_frame)
         rag_layout.setContentsMargins(0, 0, 0, 0)
         rag_label = QLabel("Load stage for RAG", rag_frame)
@@ -60,6 +67,10 @@ def init_welcome_screen(self):
         self.welcome_layout.addItem(self.vertical_spacer3)
         self.welcome_layout.addWidget(rag_frame)
         self.browse_button.clicked.connect(self.browse_directory)
+    else:
+        self.vertical_spacer3 = QSpacerItem(20, 220)
+        self.welcome_layout.addItem(self.vertical_spacer3)
+        self.mode_switcher.button_chat.setChecked(True)
 
     example_prompts = self.config.EXAMPLE_PROMPTS
 

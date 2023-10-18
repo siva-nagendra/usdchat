@@ -199,3 +199,40 @@ QFrame {
     margin: 0px;  /* No margins */
     padding: 0px;  /* No padding */
 }
+
+/* Main Frame Styles */
+#mainFrame {
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
+    border-radius: 20px;
+}
+
+/* Button Styles for buttonChat and buttonRAG */
+#buttonChat, #buttonRAG {
+    border: none;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
+    color: #ffffff;
+    border-radius: 5px;
+    padding: 10px 20px;
+    margin: 5px 0px;
+}
+
+#buttonChat:hover, #buttonRAG:hover {
+    background-color: #939393;
+}
+
+#buttonChat:checked, #buttonRAG:checked {
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #5490ff, stop:1 #407cec);
+    color: white;
+}
+
+/* Toggle styles, based on the code you've given */
+#buttonChat:pressed, #buttonRAG:pressed {
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #7baaff, stop:1 #6395f1);
+    color: white;
+}
+
+/* For the button that is not the sender in the toggleButtons function */
+#buttonChat:not(:pressed), #buttonRAG:not(:pressed) {
+    background-color: #E0E0E0;
+    color: black;
+}

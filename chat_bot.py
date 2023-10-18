@@ -1,10 +1,7 @@
 import logging
 import time
 import traceback
-from typing import List
 
-import chromadb
-import chromadb.utils.embedding_functions as ef
 import openai
 
 from config.config import Config
@@ -15,6 +12,7 @@ openai.api_key = Config.OPENAI_API_KEY
 logging.basicConfig(
     level=logging.ERROR,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 
 class Chat:
@@ -46,13 +44,13 @@ class Chat:
 
         except openai.error.APIError as e:
             error_message = handle_openai_error(401)
-            logging.error(f"OpenAI API Error: {error_message}")
+            logger.error(f"OpenAI API Error: {error_message}")
         except openai.error.APIConnectionError as e:
-            logging.error("Failed to connect to OpenAI API.")
+            logger.error("Failed to connect to OpenAI API.")
         except openai.error.RateLimitError as e:
-            logging.error("OpenAI API request exceeded rate limit.")
+            logger.error("OpenAI API request exceeded rate limit.")
         except openai.error.Timeout as e:
-            logging.error("Request to OpenAI API timed out.")
+            logger.error("Request to OpenAI API timed out.")
         except Exception as e:
-            logging.error(f"An exception occurred: {e}")
+            logger.error(f"An exception occurred: {e}")
             traceback.print_exc()
