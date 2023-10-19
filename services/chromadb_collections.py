@@ -90,7 +90,7 @@ class ChromaDBCollections:
         logger.info(f"Upserted {total_chunks} chunks.")
         if signal_progress_update:
             signal_progress_update.emit(
-                progress_range[1], "✅ {collection_name} collection created."
+                progress_range[1], f"✅ {collection_name} collection created."
             )
 
         return chunks

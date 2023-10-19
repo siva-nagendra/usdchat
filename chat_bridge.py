@@ -6,7 +6,7 @@ from usdchat.services.chromadb_collections import ChromaDBCollections
 from usdchat.utils import chat_thread, embed_thread
 
 logging.basicConfig(
-    level=logging.INFO,
+    level=logging.WARNING,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
 
@@ -41,7 +41,6 @@ class ChatBridge(QObject):
         self.embed_threads = []
         self.conversation_manager = conversation_manager
         self.collection_name = collection_name
-        print(f"collection_name: {collection_name}")
         self.chromadb_collections = ChromaDBCollections(config=self.config)
 
     @property
@@ -104,7 +103,8 @@ class ChatBridge(QObject):
 
         return messages
 
-    def query_agent(self, query_text, n_results=5):
+    def query_agent(self, query_text, n_results=7):
+        print(f"collection_name: {self.collection_name}")
         query_results = self.chromadb_collections.query_collection(
             collection_name=self.collection_name,
             query_texts=[query_text],

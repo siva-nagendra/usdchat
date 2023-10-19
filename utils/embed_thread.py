@@ -20,7 +20,6 @@ class EmbedThread(QThread):
         self.stop_flag = False
         self.stage_path = stage_path
         self.collection_name = collection_name
-        print(f"collection_name: {collection_name}")
         self.config = config
         self.chromadb_collections = ChromaDBCollections(config=self.config)
 

@@ -9,8 +9,10 @@ from PySide6.QtWidgets import (QApplication, QFileDialog, QHBoxLayout,
 
 from usdchat.chat_bot import Chat
 from usdchat.chat_bridge import ChatBridge
+from usdchat.services.chromadb_collections import ChromaDBCollections
 from usdchat.utils import chat_thread, embed_thread, process_code
 from usdchat.views.chat_bubble import ChatBubble
+from usdchat.views.chromadb_collections_ui import collections_frame
 from usdchat.views.welcome_screen import init_welcome_screen
 
 logging.basicConfig(
@@ -73,10 +75,20 @@ class ChatBotUI(QWidget):
         self.config = config
         self.conversation_manager = conversation_manager
         self.setWindowTitle(self.config.APP_NAME)
-        self.language_model = self.config.MODEL
-        self.collection_name = "usdchat"
-        self.chat_bot = Chat(self.language_model, config=self.config)
         self.rag_mode = True
+        self.model_name = self.config.MODEL
+        self.init_ui()
+        self.chromadb_collections = ChromaDBCollections(config=self.config)
+
+        self.init_welcome_screen = init_welcome_screen(self)
+
+        self.all_collections = self.chromadb_collections.all_collections()
+
+        self.collection_combo_box.addItems(self.all_collections)
+
+        self.collection_name = self.collection_combo_box.currentText()
+        self.conversation_manager.new_session()
+        self.chat_bot = Chat(self.model_name, config=self.config)
         self.chat_bridge = ChatBridge(
             self.chat_bot,
             self,
@@ -87,13 +99,11 @@ class ChatBotUI(QWidget):
             collection_name=self.collection_name,
             rag_mode=self.rag_mode,
         )
+
         self.chat_thread = chat_thread.ChatThread(
             self.chat_bot, self, "", self.usdviewApi, config=self.config
         )
 
-        self.init_ui()
-        self.init_welcome_screen = init_welcome_screen(self)
-        self.conversation_manager.new_session()
         self.load_stylesheet()
         self.connect_signals()
         self.activateWindow()
@@ -109,6 +119,7 @@ class ChatBotUI(QWidget):
         self.resize(width, height)
         self.max_attempts = self.config.MAX_ATTEMPTS
         self.current_attempts = 0
+        self.settings_widget_created = False
 
     def connect_signals(self):
         self.signal_user_message.connect(self.chat_bridge.get_bot_response)
@@ -123,7 +134,8 @@ class ChatBotUI(QWidget):
         self.chat_bridge.signal_embed_complete.connect(
             self.enable_embed_stage_button)
         self.mode_switcher.signalRagModeChanged.connect(
-            self.handleRagModeChange)
+            self.handle_rag_mode_change)
+        # self.signal_user_message.connect(self.settings_ui)
 
     def init_ui(self):
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
@@ -177,20 +189,59 @@ class ChatBotUI(QWidget):
 
     def browse_directory(self):
         stage_file_path, _ = QFileDialog.getOpenFileName(
-            self, "Select USD Stage")
+        self, "Select USD Stage")
         if stage_file_path:
             self.working_dir_line_edit.setText(stage_file_path)
+
 
     def enable_embed_stage_button(self):
         self.embed_stage_button.setText("💿 Create Collection")
         self.embed_stage_button.setProperty("stopMode", False)
         self.embed_stage_button.setStyle(self.embed_stage_button.style())
         self.progress_bar.setVisible(False)
+        self.collection_combo_box.addItem(self.collection_name)
+        self.collection_combo_box.setCurrentText(self.collection_name)
+        self.all_collections = self.chromadb_collections.all_collections()
 
     def enable_stop_embed_stage_button(self):
         self.embed_stage_button.setText("✋ Stop Embedding")
         self.embed_stage_button.setProperty("stopMode", True)
+        self.collection_name_label.setVisible(False)
         self.embed_stage_button.setStyle(self.embed_stage_button.style())
+
+    def delete_collection(self):
+        collection_name = self.collection_combo_box.currentText()
+        if collection_name:
+            self.chromadb_collections.delete_collection(collection_name)
+            self.collection_combo_box.removeItem(
+                self.collection_combo_box.currentIndex()
+            )
+
+    def reset_db(self):
+        self.chromadb_collections.reset_db()
+        self.collection_combo_box.clear()
+        self.collection_combo_box.addItems(
+            self.chromadb_collections.all_collections())
+
+    def settings_ui(self):
+        if not self.rag_mode:
+            return
+        if not self.settings_widget_created:
+            self.settings_widget_container = QWidget(self)
+            self.settings_layout = QVBoxLayout(self.settings_widget_container)
+            self.settings_layout.setContentsMargins(0, 0, 0, 0)
+            self._collections_frame = collections_frame(
+                self, self.settings_widget_container
+            )
+            self.settings_layout.addWidget(self._collections_frame)
+            self.collection_combo_box.addItems(self.all_collections)
+            self.collection_combo_box.setCurrentText(self.collection_name)
+            self.collection_combo_box.currentTextChanged.connect(
+                self.handle_collection_change
+            )
+            self.main_layout.insertWidget(0, self.settings_widget_container)
+            self.settings_widget_created = True
+        return self.main_layout
 
     def check_if_embed_ready(self):
         self.embed_stage_path = self.working_dir_line_edit.text()
@@ -226,13 +277,22 @@ class ChatBotUI(QWidget):
             self.chat_bridge.clean_up_thread()
             self.enable_embed_stage_button()
 
-    def handleRagModeChange(self, newRagMode):
+    def handle_collection_change(self):
+        self.collection_name = self.collection_combo_box.currentText()
+        try:
+            self.chat_bridge.collection_name = self.collection_name
+        except BaseException:
+            pass
+
+    def handle_rag_mode_change(self, newRagMode):
         self.rag_mode = newRagMode
-        logger.info(f"rag_mode: {self.rag_mode}")
         self.chat_bridge.rag_mode = self.rag_mode
         self.hide_welcome_screen()
         self.scroll_area_layout.removeWidget(self.welcome_widget)
         init_welcome_screen(self)
+        self.collection_combo_box.addItems(
+            self.chromadb_collections.all_collections())
+        self.collection_combo_box.setCurrentText(self.collection_name)
 
     def is_valid_usd_file(self, file_path):
         try:
@@ -283,6 +343,9 @@ class ChatBotUI(QWidget):
 
     def clear_chat_ui(self):
         self.chat_bridge.clean_up_thread()
+        if self.settings_widget_created:
+            self.main_layout.removeWidget(self.settings_widget_container)
+            self.settings_widget_container.deleteLater()
         self.scroll_area_layout.removeWidget(self.welcome_widget)
         self.conversation_layout.removeWidget(self.conversation_widget)
         self.conversation_widget.deleteLater()

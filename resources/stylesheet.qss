@@ -152,7 +152,7 @@ QSlider::handle:horizontal {
 }
 
 /* Browse Button Styles */
-QPushButton#browse_button {
+QPushButton#browse_button, #delete_button, #reset_db_button {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
     color: #ffffff;
     border: none;
@@ -161,11 +161,11 @@ QPushButton#browse_button {
     font-weight: bold;
 }
 
-QPushButton#browse_button:pressed {
+QPushButton#browse_button:pressed,  #delete_button:pressed, #reset_db_button:pressed {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #707070, stop:1 #606060);  /* Inverted Muted Grey */
 }
 
-QPushButton#browse_button:hover {
+QPushButton#browse_button:hover,  #delete_button:hover, #reset_db_button:hover {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
 }
 
@@ -204,9 +204,9 @@ QPushButton:hover {
 }
 
 /* Frame for Welcome Screen Buttons */
-QFrame {
+#rag_frame, #collections_frame, #settings_frame {
     background-color: transparent;
-    border: 0px solid #3A3A3A;  /* Slightly darker border */
+    border: 1px solid #2a2a2a;  /* Slightly darker border */
     border-radius: 0px;
     margin: 0px;  /* No margins */
     padding: 0px;  /* No padding */
