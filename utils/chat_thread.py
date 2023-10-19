@@ -8,7 +8,14 @@ class ChatThread(QThread):
     signal_bot_full_response = Signal(str)
     signal_python_code_ready = Signal(str)
 
-    def __init__(self, chat_bot, chat_widget, messages, usdviewApi):
+    def __init__(
+        self,
+        chat_bot,
+        chat_widget,
+        messages,
+        usdviewApi,
+        config=None,
+    ):
         super().__init__()
         self.stop_flag = False
         self.chat_bot = chat_bot
@@ -16,9 +23,13 @@ class ChatThread(QThread):
         self.messages = messages
         self.all_responses = ""
         self.usdviewApi = usdviewApi
+        self.config = config
         self.finished.connect(
             chat_bridge.ChatBridge(
-                self.chat_bot, self.chat_widget, self.usdviewApi
+                self.chat_bot,
+                self.chat_widget,
+                self.usdviewApi,
+                config=self.config,
             ).clean_up_thread
         )
 

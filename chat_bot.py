@@ -9,6 +9,11 @@ from usdchat.error_handlers.openai_error_handler import handle_openai_error
 
 openai.api_key = Config.OPENAI_API_KEY
 
+logging.basicConfig(
+    level=logging.ERROR,
+    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
 
 class Chat:
     def __init__(self, model, config=None):
@@ -20,7 +25,6 @@ class Chat:
     def stream_chat(self, messages, delay_time=0.1):
         if isinstance(messages, str):
             messages = [{"role": "user", "content": messages}]
-
         try:
             response = openai.ChatCompletion.create(
                 model=self.model,
@@ -35,19 +39,18 @@ class Chat:
                 new_text = event_text.get("content", "")
                 reply_content += new_text
                 yield new_text
-
                 time.sleep(delay_time)
-
             return reply_content
+
         except openai.error.APIError as e:
             error_message = handle_openai_error(401)
-            logging.error(f"OpenAI API Error: {error_message}")
+            logger.error(f"OpenAI API Error: {error_message}")
         except openai.error.APIConnectionError as e:
-            logging.error("Failed to connect to OpenAI API.")
+            logger.error("Failed to connect to OpenAI API.")
         except openai.error.RateLimitError as e:
-            logging.error("OpenAI API request exceeded rate limit.")
+            logger.error("OpenAI API request exceeded rate limit.")
         except openai.error.Timeout as e:
-            logging.error("Request to OpenAI API timed out.")
+            logger.error("Request to OpenAI API timed out.")
         except Exception as e:
-            logging.error(f"An exception occurred: {e}")
+            logger.error(f"An exception occurred: {e}")
             traceback.print_exc()

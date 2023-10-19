@@ -94,6 +94,47 @@ QPushButton:hover#clear_chat_button {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
 }
 
+/* embed_stage_button Styles */
+QPushButton#embed_stage_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton:pressed#embed_stage_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #707070, stop:1 #606060);  /* Inverted Muted Grey */
+}
+
+QPushButton:hover#embed_stage_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
+}
+
+QPushButton:disabled#embed_stage_button {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #404040, stop:1 #454545);  /* Darker muted Grey */
+    color: #a0a0a0;  /* Duller text color */
+}
+
+/* embed_stage_button when "Stop" */
+QPushButton#embed_stage_button[stopMode="true"] {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #993333, stop:1 #994422);  /* Red to Orange-ish */
+    color: #ffffff;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-weight: bold;
+}
+
+QPushButton#embed_stage_button[stopMode="true"]:pressed {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #994422, stop:1 #993333);  /* Inverted Red to Orange-ish */
+}
+
+QPushButton#embed_stage_button[stopMode="true"]:hover {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #993333, stop:1 #995544);  /* Modified Red to Orange-ish */
+}
+
 /* Temp Slider Styles */
 QSlider::groove:horizontal {
     border: 0px solid #151515;
@@ -111,7 +152,7 @@ QSlider::handle:horizontal {
 }
 
 /* Browse Button Styles */
-QPushButton#browse_button {
+QPushButton#browse_button, #delete_button, #reset_db_button {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
     color: #ffffff;
     border: none;
@@ -120,22 +161,29 @@ QPushButton#browse_button {
     font-weight: bold;
 }
 
-QPushButton#browse_button:pressed {
+QPushButton#browse_button:pressed,  #delete_button:pressed, #reset_db_button:pressed {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #707070, stop:1 #606060);  /* Inverted Muted Grey */
 }
 
-QPushButton#browse_button:hover {
+QPushButton#browse_button:hover,  #delete_button:hover, #reset_db_button:hover {
     background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #656565);  /* Modified Muted Grey */
 }
 
 /* Working Directory LineEdit Styles */
 QLineEdit#working_dir_line_edit {
     background-color: #1C1C1C;
-    color: #474747;  /* More Yellowish-Green Text */
+    color: #bdbdbd;  /* More Yellowish-Green Text */
     padding: 3px;
     border-radius: 10px;
 }
 
+/* collection_name_line_edit Styles */
+QLineEdit#collection_name_line_edit {
+    background-color: #1C1C1C;
+    color: #bdbdbd;  /* More Yellowish-Green Text */
+    padding: 3px;
+    border-radius: 10px;
+}
 
 /* Welcome Screen Buttons */
 QPushButton {
@@ -156,10 +204,47 @@ QPushButton:hover {
 }
 
 /* Frame for Welcome Screen Buttons */
-QFrame {
+#rag_frame, #collections_frame, #settings_frame {
     background-color: transparent;
-    border: 0px solid #3A3A3A;  /* Slightly darker border */
+    border: 1px solid #2a2a2a;  /* Slightly darker border */
     border-radius: 0px;
     margin: 0px;  /* No margins */
     padding: 0px;  /* No padding */
+}
+
+/* Main Frame Styles */
+#mainFrame {
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
+    border-radius: 20px;
+}
+
+/* Button Styles for buttonChat and buttonRAG */
+#buttonChat, #buttonRAG {
+    border: none;
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #606060, stop:1 #707070);  /* Muted Grey */
+    color: #ffffff;
+    border-radius: 5px;
+    padding: 10px 20px;
+    margin: 5px 0px;
+}
+
+#buttonChat:hover, #buttonRAG:hover {
+    background-color: #939393;
+}
+
+#buttonChat:checked, #buttonRAG:checked {
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #5490ff, stop:1 #407cec);
+    color: white;
+}
+
+/* Toggle styles, based on the code you've given */
+#buttonChat:pressed, #buttonRAG:pressed {
+    background-color: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #7baaff, stop:1 #6395f1);
+    color: white;
+}
+
+/* For the button that is not the sender in the toggleButtons function */
+#buttonChat:not(:pressed), #buttonRAG:not(:pressed) {
+    background-color: #E0E0E0;
+    color: black;
 }

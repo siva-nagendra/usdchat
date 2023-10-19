@@ -1,3 +1,5 @@
 PySide6
 openai
 usd-core
+chromadb
+tiktoken

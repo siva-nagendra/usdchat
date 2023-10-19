@@ -25,7 +25,8 @@ def main():
     chat_ui = ChatBotUI(
         config=config,
         conversation_manager=conversation_manager,
-        standalone=True)
+        standalone=True,
+    )
     chat_ui.show()
     sys.exit(app.exec())
 

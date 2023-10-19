@@ -1,10 +1,6 @@
-import logging
-
 from PySide6.QtCore import Qt
 from PySide6.QtGui import QBrush, QColor, QLinearGradient, QPainter
 from PySide6.QtWidgets import QLabel, QSizePolicy, QVBoxLayout, QWidget
-
-logging.basicConfig(level=logging.WARNING)
 
 
 class ChatBubble(QWidget):
@@ -107,10 +103,8 @@ class ChatBubble(QWidget):
         return formatted_response
 
     def update_text(self, new_text):
-        logging.info(f"updating text to {new_text}")
         self.current_text += new_text
         formatted_text = self.format_text(self.current_text)
         self.label.setText(formatted_text)
         self.label.adjustSize()
         self.adjustSize()
-        logging.info(f"updated text to {formatted_text}")
