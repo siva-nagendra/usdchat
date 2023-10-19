@@ -189,10 +189,9 @@ class ChatBotUI(QWidget):
 
     def browse_directory(self):
         stage_file_path, _ = QFileDialog.getOpenFileName(
-        self, "Select USD Stage")
+            self, "Select USD Stage")
         if stage_file_path:
             self.working_dir_line_edit.setText(stage_file_path)
-
 
     def enable_embed_stage_button(self):
         self.embed_stage_button.setText("💿 Create Collection")
@@ -355,6 +354,9 @@ class ChatBotUI(QWidget):
         self.scroll_area_layout.addWidget(self.conversation_widget)
         self.user_input.reset_size()
         self.user_input.clear()
+        # if self.collection_combo_box:
+        #     self.collection_combo_box.addItems(self.all_collections)
+        #     self.collection_combo_box.setCurrentText(self.collection_name)
 
         init_welcome_screen(self)
         self.conversation_manager.new_session()
