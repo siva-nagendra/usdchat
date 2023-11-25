@@ -9,7 +9,7 @@ os.environ["ALLOW_RESET"] = "TRUE"
 
 class Config:
     APP_NAME = "usdchat"
-    MODEL = "gpt-4"
+    MODEL = "gpt-4-1106-preview"
     # MODEL = "gpt-3.5-turbo-0613"
     DB_PATH = "/tmp/chromadb.db"
     EMBEDDING_MODEL = "all-MiniLM-L6-v2"

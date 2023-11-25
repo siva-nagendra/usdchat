@@ -9,8 +9,14 @@ from PySide6.QtGui import QFont
 from PySide6.QtWidgets import QDockWidget, QPushButton, QSizePolicy
 
 from usdchat.config.config import Config
-from usdchat.utils.conversation_manager import ConversationManager
-from usdchat.views import chat_widget
+from usdchat.widgets import chat_bot_ui
+from PySide6.QtCore import Qt
+from PySide6.QtGui import QFont
+from PySide6.QtWidgets import QApplication
+from PySide6.QtQuick import QQuickWindow
+from PySide6.QtQuick import QSGRendererInterface
+QApplication.setAttribute(Qt.AA_ShareOpenGLContexts)
+QQuickWindow.setGraphicsApi(QSGRendererInterface.OpenGLRhi)
 
 logging.basicConfig(
     level=logging.WARNING,
@@ -43,6 +49,7 @@ class USDViewAPIManager:
 
 
 def onStartup(usdviewApi):
+
     load_chat_widget(usdviewApi)
 
 
@@ -54,7 +61,7 @@ class USDChatPluginContainer(PluginContainer):
             "Load Chat Widget",
             load_chat_widget,
         )
-        onStartup(usdviewApi)
+        # onStartup(usdviewApi)
 
     def configureView(self, plugRegistry, plugUIBuilder):
         usdchat_menu = plugUIBuilder.findOrCreateMenu("🤖 USDChat")
@@ -102,15 +109,12 @@ def load_chat_widget(usdviewApi=None):
     config = Config()
     config.load_from_yaml(
         get_file_from_current_path("usdview_chat_config.yaml"))
-    conversation_manager = ConversationManager(new_session=True, config=config)
 
     if active_chat_ui_instance is None or not active_chat_ui_instance.isVisible():
         logger.info("Loading chat widget")
-        active_chat_ui_instance = chat_widget.ChatBotUI(
-            config,
-            conversation_manager=conversation_manager,
-            usdviewApi=usdviewApi,
+        active_chat_ui_instance = chat_bot_ui.ChatBotUI(
             parent=usdviewApi.qMainWindow,
+            usdviewApi=usdviewApi,
         )
 
         dock_widget = CollapsibleDockWidget(

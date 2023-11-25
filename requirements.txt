@@ -1,5 +1,2 @@
-PySide6
-openai
-usd-core
-chromadb
-tiktoken
+
+reflex>=0.3.4
