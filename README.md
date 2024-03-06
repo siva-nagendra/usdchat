@@ -93,7 +93,7 @@ With the help of ChromaDB, usdchat now has a firmer grasp of the scene's structu
 - For the plugin, you'll need `usdview`. Check how to get it [here](https://github.com/siva-nagendra/usdchat).
 - Set some environment magic:
     ```bash
-    export PYTHONPATH=$PYTHONPATH:/path/to/usdchat
+    export PYTHONPATH=$PYTHONPATH:/path/to/usdchat:/path/to/usdchat/plugins
     export PXR_PLUGINPATH_NAME=$PXR_PLUGINPATH_NAME:/path/to/usdchat/plugins/usdview_chat
     ```
 - Don't forget the OpenAI API key, the secret sauce 🤫:

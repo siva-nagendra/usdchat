@@ -1,5 +1,7 @@
 PySide6
-openai
+openai==0.28.1
 usd-core
 chromadb
 tiktoken
+pyyaml
+sentence_transformers
